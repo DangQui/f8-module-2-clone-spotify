@@ -33,6 +33,25 @@
             </button>
           </div>
 
+          <!-- Nội dung sidebar cho trạng thái chưa đăng nhập -->
+          <div class="unauth-library">
+            <div class="unauth-prompt">
+              <h3 class="prompt-title">Create your first playlist</h3>
+              <p class="prompt-text">It's easy, we'll help you</p>
+              <button class="prompt-btn create-playlist-btn">
+                Create playlist
+              </button>
+            </div>
+
+            <div class="unauth-prompt">
+              <h3 class="prompt-title">Let’s find some podcasts to follow</h3>
+              <p class="prompt-text">We’ll keep you updated on new episodes</p>
+              <button class="prompt-btn browse-podcasts-btn">
+                Browse podcasts
+              </button>
+            </div>
+          </div>
+
           <div class="nav-tabs">
             <button class="nav-tab active">Playlists</button>
             <button class="nav-tab">Artists</button>
@@ -538,7 +557,7 @@
             <h1 class="modal-heading">Log in to Spotify</h1>
 
             <form class="auth-form-content">
-              <div class="form-group invalid">
+              <div class="form-group">
                 <input
                   type="email"
                   placeholder="Email address"

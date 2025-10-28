@@ -2,6 +2,7 @@
 
 import { setupBlurValidation } from "../utils/validation.js";
 import httpRequest from "../utils/httpRequest.js";
+import { checkAuthOnLoad } from "../services/authService.js";
 
 export function initAuthModal() {
   // Lấy các phần tử DOM
@@ -147,7 +148,7 @@ export function initAuthModal() {
       );
       localStorage.setItem("accessToken", access_token);
       localStorage.setItem("currentUser", JSON.stringify(user));
-      updateCurrentUser(user); // Gọi từ authService
+      checkAuthOnLoad(); // Gọi từ authService
       closeModal();
     } catch (error) {
       const err = error?.response?.error || {};
@@ -178,12 +179,12 @@ export function initAuthModal() {
 
       emailGroup.classList.add("invalid");
       emailSpan.textContent =
-        err.message || "Đăng ký thất bại. Vui lòng thử lại.";
+        err.message || "Registration failed. Please try again.";
     }
   });
 
   // Xử lý submit cho form đăng nhập
-  const loginContent = loginForm?.querySelector("auth-form-content");
+  const loginContent = loginForm?.querySelector(".auth-form-content");
   loginContent?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -207,6 +208,68 @@ export function initAuthModal() {
     };
 
     try {
-    } catch (error) {}
+      const { user, access_token } = await httpRequest.post(
+        "auth/login",
+        credentials
+      );
+      localStorage.setItem("accessToken", access_token);
+      localStorage.setItem("currentUser", JSON.stringify(user));
+      checkAuthOnLoad();
+      closeModal();
+    } catch (error) {
+      const err = error?.response?.error || {};
+      const details = err.details || [];
+
+      // Case 1: Thông tin đăng nhập sai
+      if (err.code === "INVALID_CREDENTIALS") {
+        emailGroup.classList.add("invalid");
+        passwordGroup.classList.add("invalid");
+        emailSpan.textContent = err.message;
+        passwordSpan.textContent = err.message;
+        return;
+      }
+
+      // Case 2: Validation errors
+      if (err.code === "VALIDATION_ERROR" && Array.isArray(details)) {
+        let hasError = false;
+        details.forEach((detail) => {
+          if (detail.field === "email") {
+            emailGroup.classList.add("invalid");
+            emailSpan.textContent = detail.message;
+            hasError = true;
+          }
+          if (detail.field === "password") {
+            passwordGroup.classList.add("invalid");
+            passwordSpan.textContent = detail.message;
+            hasError = true;
+          }
+        });
+        if (hasError) return;
+      }
+
+      // Case 3: Lỗi chung
+      // emailGroup.classList.add("invalid");
+      passwordGroup.classList.add("invalid");
+      // emailSpan.textContent = err.message || "Login failed. Please try again.";
+      passwordSpan.textContent =
+        err.message || "Login failed. Please try again.";
+    }
   });
+
+  // InitAuthModal
+  const createPlaylistBtn = document.querySelector(".create-playlist-btn");
+  const browsePodcastsBtn = document.querySelector(".browse-podcasts-btn");
+
+  if (createPlaylistBtn) {
+    createPlaylistBtn.addEventListener("click", () => {
+      showLoginForm();
+      openModal();
+    });
+  }
+
+  if (browsePodcastsBtn) {
+    browsePodcastsBtn.addEventListener("click", () => {
+      console.log("Browse podcasts clicked");
+    });
+  }
 }

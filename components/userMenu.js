@@ -1,5 +1,7 @@
 // Xử lý dropdown menu người dùng (avatar, logout)
 
+import { checkAuthOnLoad } from "../services/authService.js";
+
 export function initUserMenu() {
   const userAvatar = document.getElementById("userAvatar");
   const userDropdown = document.getElementById("userDropdown");
@@ -28,9 +30,19 @@ export function initUserMenu() {
   });
 
   // Xử lý logout
-  logoutBtn.addEventListener("click", () => {
+  logoutBtn.addEventListener("click", async () => {
     userDropdown.classList.remove("show");
-    console.log("Đã click logout");
-    // TODO: Thêm logic logout (xóa localStorage, chuyển trang)
+
+    try {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("currentUser");
+
+      await checkAuthOnLoad();
+
+      // Reload lại trang
+      window.location.reload(); // window.location.href = "/"
+    } catch (error) {
+      window.location.reload();
+    }
   });
 }
