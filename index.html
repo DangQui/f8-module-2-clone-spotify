@@ -172,7 +172,7 @@
 
         <div class="content-wrapper">
           <!-- Today's Biggest Hits Section -->
-          <section class="hits-section">
+          <!-- <section class="hits-section">
             <div class="section-header">
               <h2 class="section-heading">Today's biggest hits</h2>
             </div>
@@ -266,6 +266,28 @@
                   <p class="hit-card-artist">Đen</p>
                 </div>
               </div>
+            </div>
+          </section> -->
+
+          <!-- Hits Section (Trending Tracks Carousel) -->
+          <section id="hits-section" class="hits-section">
+            <div class="section-header">
+              <h2 class="section-heading">Today's biggest hits</h2>
+            </div>
+            <div class="carousel-wrapper">
+              <div class="carousel-container">
+                <div class="tracks" id="hits-track">
+                  <!-- Cards sẽ render vào đây bằng JS -->
+                </div>
+              </div>
+              <ul class="pagination" id="hits-pagination"></ul>
+              <!-- Arrows -->
+              <button id="hits-prev" class="nav-btn prev-btn">
+                <i class="fa-solid fa-chevron-left"></i>
+              </button>
+              <button id="hits-next" class="nav-btn next-btn">
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
             </div>
           </section>
 

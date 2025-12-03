@@ -1170,3 +1170,122 @@
   text-overflow: ellipsis;
   font-weight: 400;
 }
+
+/* Carousel Wrapper (Cho Cả Tracks & Artists) */
+.carousel-wrapper {
+  position: relative;
+  margin-bottom: var(--spacing-lg);
+}
+
+.carousel-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  height: auto; /* Tự adjust theo cards */
+  transition: all 0.3s ease;
+}
+
+.tracks {
+  display: flex;
+  transition: transform 0.3s ease; /* Mượt như mẫu, nhưng ngắn hơn */
+  gap: var(--spacing-lg); /* Giữ gap từ grid */
+}
+
+.hit-card.track-item {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 0;
+}
+
+.track-item {
+  /* Reuse .hit-card hoặc .artist-card làm flex child */
+  flex: 0 0 calc(20% - var(--spacing-lg) * 0.8); /* 20% cho 5 items, trừ gap */
+  min-width: 180px; /* Min từ grid cũ */
+  max-width: 216px; /* Giới hạn responsive */
+}
+
+/* Arrows (Reuse .nav-btn, position absolute như mẫu) */
+.carousel-wrapper .nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-85%);
+  z-index: 10;
+  background: #1f1f1f;
+  color: var(--text-primary);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0; /* Ẩn mặc định */
+  pointer-events: auto; /* Đảm bảo click được */
+  transition: all var(--transition-fast);
+}
+
+.carousel-wrapper:hover .nav-btn {
+  opacity: 1;
+}
+
+.carousel-wrapper .prev-btn {
+  left: 0;
+  margin-left: var(--spacing-md);
+}
+
+.carousel-wrapper .next-btn {
+  right: 0;
+  margin-right: var(--spacing-md);
+}
+
+.nav-btn:hover {
+  background: #2a2a2a;
+  transform: scale(1.04) translateY(-85%);
+}
+
+.nav-btn:disabled {
+  cursor: not-allowed;
+  transform: translateY(-85%);
+}
+
+.nav-btn svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+/* Pagination Dots (Từ Mẫu, Nhưng Nhỏ Gọn, Dưới Container) */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  list-style: none;
+  margin-top: var(--spacing-md);
+  padding: 0;
+}
+
+.pagination-item {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.pagination-item.active,
+.pagination-item:hover {
+  background: var(--accent-primary);
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+/* Responsive: Trên mobile, show ít items hơn (ví dụ 2-3) */
+@media (max-width: 768px) {
+  .track-item {
+    flex: 0 0 calc(50% - var(--spacing-lg) * 0.5); /* 2 items */
+  }
+}

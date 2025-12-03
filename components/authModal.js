@@ -258,12 +258,34 @@ export function initAuthModal() {
 
   // InitAuthModal
   const createPlaylistBtn = document.querySelector(".create-playlist-btn");
+  const topCreateBtn = document.querySelector(".create-btn");
   const browsePodcastsBtn = document.querySelector(".browse-podcasts-btn");
 
   if (createPlaylistBtn) {
-    createPlaylistBtn.addEventListener("click", () => {
-      showLoginForm();
-      openModal();
+    createPlaylistBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        showLoginForm();
+        openModal();
+        return;
+      }
+    });
+  }
+
+  if (topCreateBtn) {
+    topCreateBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        showLoginForm();
+        openModal();
+        return;
+      }
     });
   }
 
