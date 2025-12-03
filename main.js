@@ -6,6 +6,7 @@ import {
 import { initUserMenu } from "./components/userMenu.js";
 import { initCarousel } from "./components/carousel.js";
 import { checkAuthOnLoad } from "./services/authService.js";
+import { fetchArtistById } from "./services/artistService.js";
 
 // Xử lý bật/tắt mật khẩu (global)
 document.addEventListener("DOMContentLoaded", () => {
