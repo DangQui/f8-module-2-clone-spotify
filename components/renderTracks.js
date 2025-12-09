@@ -19,7 +19,7 @@ export async function renderTrendingTracks(
         container.innerHTML = data
           .map(
             (item) => `
-            <div class="hit-card track-item">
+            <div class="hit-card track-artist-item">
               <div class="hit-card-cover">
                 <img src="${
                   item.image_url || "placeholder.svg?height=180&width=180"

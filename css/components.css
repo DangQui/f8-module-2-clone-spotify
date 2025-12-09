@@ -1185,20 +1185,20 @@
   transition: all 0.3s ease;
 }
 
-.tracks {
+.popular-artists-track {
   display: flex;
   transition: transform 0.3s ease; /* Mượt như mẫu, nhưng ngắn hơn */
   gap: var(--spacing-lg); /* Giữ gap từ grid */
 }
 
-.hit-card.track-item {
+.hit-card.track-artist-item {
   display: flex;
   flex-direction: column;
   align-items: start;
   gap: 0;
 }
 
-.track-item {
+.track-artist-item {
   /* Reuse .hit-card hoặc .artist-card làm flex child */
   flex: 0 0 calc(20% - var(--spacing-lg) * 0.8); /* 20% cho 5 items, trừ gap */
   min-width: 180px; /* Min từ grid cũ */

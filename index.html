@@ -276,7 +276,7 @@
             </div>
             <div class="carousel-wrapper">
               <div class="carousel-container">
-                <div class="tracks" id="hits-track">
+                <div class="popular-artists-track" id="hits-track">
                   <!-- Cards sẽ render vào đây bằng JS -->
                 </div>
               </div>
@@ -292,83 +292,24 @@
           </section>
 
           <!-- Popular Artists Section -->
-          <section class="artists-section">
+          <section class="artists-section" id="artists-section">
             <div class="section-header">
               <h2 class="section-heading">Popular artists</h2>
             </div>
-            <div class="artists-grid">
-              <div class="artist-card">
-                <div class="artist-card-cover">
-                  <img src="placeholder.svg?height=160&width=160" alt="Đen" />
-                  <button class="artist-play-btn">
-                    <i class="fas fa-play"></i>
-                  </button>
-                </div>
-                <div class="artist-card-info">
-                  <h3 class="artist-card-name">Đen</h3>
-                  <p class="artist-card-type">Artist</p>
+            <div class="carousel-wrapper">
+              <div class="carousel-container">
+                <div class="popular-artists-track" id="popular-artists-track">
+                  <!-- Card sẽ được render vào đây -->
                 </div>
               </div>
+              <ul class="pagination" id="popular-artists-pagination"></ul>
 
-              <div class="artist-card">
-                <div class="artist-card-cover">
-                  <img
-                    src="placeholder.svg?height=160&width=160"
-                    alt="Taylor Swift" />
-                  <button class="artist-play-btn">
-                    <i class="fas fa-play"></i>
-                  </button>
-                </div>
-                <div class="artist-card-info">
-                  <h3 class="artist-card-name">Taylor Swift</h3>
-                  <p class="artist-card-type">Artist</p>
-                </div>
-              </div>
-
-              <div class="artist-card">
-                <div class="artist-card-cover">
-                  <img
-                    src="placeholder.svg?height=160&width=160"
-                    alt="Sơn Tùng M-TP" />
-                  <button class="artist-play-btn">
-                    <i class="fas fa-play"></i>
-                  </button>
-                </div>
-                <div class="artist-card-info">
-                  <h3 class="artist-card-name">Sơn Tùng M-TP</h3>
-                  <p class="artist-card-type">Artist</p>
-                </div>
-              </div>
-
-              <div class="artist-card">
-                <div class="artist-card-cover">
-                  <img
-                    src="placeholder.svg?height=160&width=160"
-                    alt="Harry Styles" />
-                  <button class="artist-play-btn">
-                    <i class="fas fa-play"></i>
-                  </button>
-                </div>
-                <div class="artist-card-info">
-                  <h3 class="artist-card-name">Harry Styles</h3>
-                  <p class="artist-card-type">Artist</p>
-                </div>
-              </div>
-
-              <div class="artist-card">
-                <div class="artist-card-cover">
-                  <img
-                    src="placeholder.svg?height=160&width=160"
-                    alt="Trúc Nhân" />
-                  <button class="artist-play-btn">
-                    <i class="fas fa-play"></i>
-                  </button>
-                </div>
-                <div class="artist-card-info">
-                  <h3 class="artist-card-name">Trúc Nhân</h3>
-                  <p class="artist-card-type">Artist</p>
-                </div>
-              </div>
+              <button id="artists-prev" class="nav-btn prev-btn">
+                <i class="fa-solid fa-chevron-left"></i>
+              </button>
+              <button id="artists-next" class="nav-btn next-btn">
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
             </div>
           </section>
 

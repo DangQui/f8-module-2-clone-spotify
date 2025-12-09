@@ -6,10 +6,10 @@ export async function fetchAllArtists(limit = 20, offset = 0) {
     const response = await httpRequest.get(
       `artists?limit=${limit}&offset=${offset}`
     );
-    return response.artists || [];
+    return response || {};
   } catch (error) {
     console.error("Lỗi fetch all artists:", error);
-    return [];
+    return {};
   }
 }
 
@@ -24,6 +24,7 @@ export async function fetchTrendingArtists(limit = 5) {
   }
 }
 
+// GET /api/artists/:id (Detail artist)
 export async function fetchArtistById(artistId) {
   try {
     console.log("Calling API with ID:", artistId); // Log input.
@@ -32,5 +33,41 @@ export async function fetchArtistById(artistId) {
   } catch (error) {
     console.error("Lỗi fetch Artist By ID:", error);
     return {};
+  }
+}
+
+// GET /api/artists/:id/tracks/popular
+export async function fetchArtistPopularTracks(artistId) {
+  try {
+    const response = await httpRequest.get(
+      `artists/${artistId}/tracks/popular`
+    );
+    return response || {};
+  } catch (error) {
+    console.error("Lỗi fetch artist popular tracks: ", error);
+    return {};
+  }
+}
+
+// GET /api/artist/:id/albums
+export async function fetchArtistAlbums(artistId) {
+  try {
+    const response = await httpRequest.get(`artists/${artistId}/albums`);
+    console.log(response);
+    return response || {};
+  } catch (error) {
+    console.error("Lỗi fetch artist albums:", error);
+    return {};
+  }
+}
+
+// POST /api/artists (create new artist)
+export async function createArtist(artistData) {
+  try {
+    const response = await httpRequest.post(`artists`, artistData);
+    return response.artists || response;
+  } catch (error) {
+    console.error("Lỗi create artist:", error);
+    throw error;
   }
 }
