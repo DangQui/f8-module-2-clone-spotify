@@ -342,11 +342,13 @@
 }
 
 /* Artist Hero */
+
 .artist-hero {
   position: relative;
   height: 340px;
   margin: 0 -24px var(--spacing-lg) -24px;
   overflow: hidden;
+  display: none;
 }
 
 .hero-background {
@@ -409,7 +411,7 @@
 
 /* Artist Controls */
 .artist-controls {
-  display: flex;
+  display: none;
   align-items: center;
   gap: var(--spacing-lg);
   margin-bottom: var(--spacing-2xl);
@@ -440,6 +442,7 @@
 /* Track List */
 .popular-section {
   margin-bottom: var(--spacing-2xl);
+  display: none;
 }
 
 .section-title {
@@ -1034,6 +1037,7 @@
 .hits-section,
 .artists-section {
   margin-bottom: var(--spacing-2xl);
+  display: none;
 }
 
 .section-header {
@@ -1121,7 +1125,7 @@
 }
 
 .hit-card:hover .hit-play-btn,
-.artist-card:hover .artist-play-btn {
+.hit-card:hover .artist-play-btn {
   opacity: 1;
   transform: translateY(0);
 }
@@ -1179,7 +1183,7 @@
 
 .carousel-container {
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; */
   border-radius: var(--radius-md);
   height: auto; /* Tự adjust theo cards */
   transition: all 0.3s ease;
@@ -1288,4 +1292,9 @@
   .track-item {
     flex: 0 0 calc(50% - var(--spacing-lg) * 0.5); /* 2 items */
   }
+}
+
+/* Show hero Artist */
+.show {
+  display: block;
 }

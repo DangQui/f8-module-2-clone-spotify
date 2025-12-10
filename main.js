@@ -47,7 +47,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Render trending vào #hits-track (truyền selector để render HTML)
     const trendingData = await renderTrendingTracks(20, "#hits-track");
     const artistsData = await renderPopularArtists(15, 0);
-    await renderPopularTracks(3, ".track-list");
 
     await renderPopularArtists(20, 0);
 
@@ -59,6 +58,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       trendingData.length,
       5
     );
+
     initCarousel(
       "artists-section",
       "popular-artists-track",

@@ -27,7 +27,6 @@ export async function fetchTrendingArtists(limit = 5) {
 // GET /api/artists/:id (Detail artist)
 export async function fetchArtistById(artistId) {
   try {
-    console.log("Calling API with ID:", artistId); // Log input.
     const response = await httpRequest.get(`artists/${artistId}`); // GET method.
     return response || {};
   } catch (error) {
