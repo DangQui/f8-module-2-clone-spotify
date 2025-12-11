@@ -260,6 +260,11 @@ export function initAuthModal() {
   const createPlaylistBtn = document.querySelector(".create-playlist-btn");
   const topCreateBtn = document.querySelector(".create-btn");
   const browsePodcastsBtn = document.querySelector(".browse-podcasts-btn");
+  const hitPlayBtn = document.querySelector(".hit-play-btn");
+  console.log(hitPlayBtn);
+
+  const artistPlayBtn = document.querySelector(".artist-play-btn");
+  const playBtnLarge = document.querySelector(".play-btn-large");
 
   if (createPlaylistBtn) {
     createPlaylistBtn.addEventListener("click", (e) => {
@@ -277,6 +282,34 @@ export function initAuthModal() {
 
   if (topCreateBtn) {
     topCreateBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        showLoginForm();
+        openModal();
+        return;
+      }
+    });
+  }
+
+  if (hitPlayBtn) {
+    hitPlayBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        showLoginForm();
+        openModal();
+        return;
+      }
+    });
+  }
+
+  if (artistPlayBtn) {
+    artistPlayBtn.addEventListener("click", (e) => {
       e.preventDefault();
 
       const accessToken = localStorage.getItem("accessToken");

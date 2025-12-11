@@ -4,6 +4,7 @@ import {
   fetchArtistPopularTracks,
 } from "../services/artistService.js";
 import { formatMonthlyListeners } from "../utils/numberFormat.js";
+import { formatTrackDuration } from "../utils/timeFormat.js";
 
 let handelArtistClick = null;
 
@@ -51,8 +52,10 @@ async function renderArtistPopularTracks(artistId, limit = 10) {
     const response = await fetchArtistPopularTracks(artistId);
     const tracks = response.tracks || [];
     const trackList = document.querySelector(".popular-section .track-list");
+
     if (response.pagination.total === 0) {
-      trackList.innerHTML = `<p class="no-data">No popular tracks</p>`;
+      trackList.innerHTML = `<p class="no-data">No popular tracks!</p>`;
+      return;
     }
 
     trackList.innerHTML = ""; // Clear toàn bộ nội dung cũ trong .track-list
@@ -75,14 +78,19 @@ async function renderArtistPopularTracks(artistId, limit = 10) {
           <div class="track-name">${track.title}</div>
         </div>
         <div class="track-plays">${track.play_count}</div>
-        <div class="track-duration">${track.duration}</div>
+        <div class="track-duration">${formatTrackDuration(track.duration)}</div>
         <button class="track-menu-btn" data-track-id="${
           track.id
         }"><i class="fas fa-ellipsis-h"></i></button>
       `;
       trackList.appendChild(trackItem);
     });
-  } catch (error) {}
+  } catch (error) {
+    console.error("Error rendering artist popular tracks:", error);
+    const trackList = document.querySelector(".popular-section .track-list");
+    if (trackList)
+      trackList.innerHTML = `<p class="no-data">Error loading tracks</p>`;
+  }
 }
 
 handelArtistClick = async (e) => {
