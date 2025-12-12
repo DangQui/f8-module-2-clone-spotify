@@ -24,7 +24,7 @@ async function renderArtistHero(artistData) {
 
   if (!artistData) {
     const heroContent = heroSection.querySelector(".hero-content");
-    if (heroContent) heroContent.innerHTML`<p>No artist data</p>`;
+    if (heroContent) heroContent.innerHTML = `<p>No artist data</p>`;
     return;
   }
 

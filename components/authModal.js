@@ -260,11 +260,36 @@ export function initAuthModal() {
   const createPlaylistBtn = document.querySelector(".create-playlist-btn");
   const topCreateBtn = document.querySelector(".create-btn");
   const browsePodcastsBtn = document.querySelector(".browse-podcasts-btn");
-  const hitPlayBtn = document.querySelector(".hit-play-btn");
-  console.log(hitPlayBtn);
 
-  const artistPlayBtn = document.querySelector(".artist-play-btn");
-  const playBtnLarge = document.querySelector(".play-btn-large");
+  document.addEventListener("click", (e) => {
+    const target = e.target.closest(
+      ".hit-play-btn, .artist-play-btn, .play-btn-large"
+    );
+
+    if (target) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        showLoginForm();
+        openModal();
+        return;
+      }
+
+      // Xử lý play logic nếu đã login
+      if (target.classList.contains("hit-play-btn")) {
+        const trackId = target.dataset.trackId;
+        console.log("Play track:", trackId);
+        // Gọi hàm play track
+      } else if (target.classList.contains("artist-play-btn")) {
+        const artistId = target.dataset.artistId;
+        console.log("Play artist:", artistId);
+        // Gọi hàm play artist
+      }
+    }
+  });
 
   if (createPlaylistBtn) {
     createPlaylistBtn.addEventListener("click", (e) => {
@@ -282,34 +307,6 @@ export function initAuthModal() {
 
   if (topCreateBtn) {
     topCreateBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-
-      const accessToken = localStorage.getItem("accessToken");
-
-      if (!accessToken) {
-        showLoginForm();
-        openModal();
-        return;
-      }
-    });
-  }
-
-  if (hitPlayBtn) {
-    hitPlayBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-
-      const accessToken = localStorage.getItem("accessToken");
-
-      if (!accessToken) {
-        showLoginForm();
-        openModal();
-        return;
-      }
-    });
-  }
-
-  if (artistPlayBtn) {
-    artistPlayBtn.addEventListener("click", (e) => {
       e.preventDefault();
 
       const accessToken = localStorage.getItem("accessToken");

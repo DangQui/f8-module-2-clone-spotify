@@ -4,6 +4,7 @@ import { renderTrendingTracks } from "./components/renderTracks.js";
 import { renderPopularArtists } from "./components/renderArtists.js";
 import { initUserMenu } from "./components/userMenu.js";
 import { initCarousel } from "./components/carousel.js";
+import musicPlayer from "./components/musicPlayer.js";
 
 // Service
 import { checkAuthOnLoad } from "./services/authService.js";

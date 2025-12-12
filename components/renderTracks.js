@@ -1,8 +1,8 @@
 import {
   fetchTrendingTracks,
   fetchPopularTracks,
-  playTrack,
 } from "../services/tracksService.js";
+import musicPlayer from "./musicPlayer.js";
 
 // Render danh sách bài hát trending (cho carousel, dùng service + render nếu có selector)
 export async function renderTrendingTracks(
@@ -19,7 +19,7 @@ export async function renderTrendingTracks(
         container.innerHTML = data
           .map(
             (item) => `
-            <div class="hit-card track-artist-item">
+            <div class="hit-card track-artist-item" data-track-id="${item.id}" >
               <div class="hit-card-cover">
                 <img src="${
                   item.image_url || "placeholder.svg?height=180&width=180"
@@ -41,6 +41,12 @@ export async function renderTrendingTracks(
           .join("");
       }
     }
+
+    // Load playing vào music player
+    if (data.length > 0) {
+      musicPlayer.loadPlaylist(data, 0);
+    }
+
     return data; // Return array tracks để main.js biết total
   } catch (error) {
     console.error("Error rendering trending tracks:", error);
