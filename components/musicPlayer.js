@@ -6,7 +6,7 @@ class MusicPlayer {
     // DOM Elements - Player Controls
     this._audioElement = document.querySelector("#audio-player");
     this._playPauseBtn = document.querySelector(".player-center .play-btn");
-    this._playIcon = this._playPauseBtn.querySelector("i");
+    this._playIcon = this._playPauseBtn?.querySelector("i");
     this._nextBtn = document.querySelector(
       ".player-center .control-btn:nth-child(4)"
     );
@@ -87,9 +87,13 @@ class MusicPlayer {
     this._audioElement?.addEventListener("play", () => this._handlePlay());
     this._audioElement?.addEventListener("pause", () => this._handlePause());
 
-    // Next/Prev
+    // Next/Prev - ✅ FIX: Sửa từ _toggleRepeat thành _playPrevious
     this._nextBtn?.addEventListener("click", () => this._playNext());
-    this._prevBtn?.addEventListener("click", () => this._toggleRepeat());
+    this._prevBtn?.addEventListener("click", () => this._playPrevious());
+
+    // Shuffle/Repeat
+    this._shuffleBtn?.addEventListener("click", () => this._toggleShuffle());
+    this._repeatBtn?.addEventListener("click", () => this._toggleRepeat());
 
     // Progress bar
     this._progressBar?.addEventListener("mousedown", (e) =>
@@ -99,17 +103,21 @@ class MusicPlayer {
       this._handleProgressClick(e)
     );
     document.addEventListener("mousemove", (e) =>
-      this._handleProgressMouseMove()
+      this._handleProgressMouseMove(e)
     );
     document.addEventListener("mouseup", () => this._handleProgressMouseUp());
 
-    // Volume
+    // Volume - ✅ FIX: Sửa từ this._volume thành this._volumeBar
     this._volumeBtn?.addEventListener("click", () => this._toggleMute());
-    this._volume?.addEventListener("click", (e) => this._handleVolumeClick(e));
+    this._volumeBar?.addEventListener("click", (e) =>
+      this._handleVolumeClick(e)
+    );
 
-    // Time update
-    this._audioElement.addEventListener("timeupdate", this._handleTimeUpdate());
-    this._audioElement.addEventListener("loadmetadata", () =>
+    // Time update - ✅ FIX: Thêm arrow function
+    this._audioElement.addEventListener("timeupdate", () =>
+      this._handleTimeUpdate()
+    );
+    this._audioElement.addEventListener("loadedmetadata", () =>
       this._handleMetadataLoaded()
     );
     this._audioElement.addEventListener("ended", () =>
@@ -218,7 +226,7 @@ class MusicPlayer {
     this._currentIndex = startIndex;
 
     if (this._playList.length > 0) {
-      this.loadTrack(this._playList[this._currentIndex], true);
+      this.loadTrack(this._playList[this._currentIndex], false);
     }
   }
 
@@ -232,9 +240,15 @@ class MusicPlayer {
       this._playerImage.alt = this._currentTrack.title;
     }
 
+    // Update title
+    if (this._playerTitle) {
+      this._playerTitle.textContent = this._currentTrack.title;
+    }
+
     // Update Artist
     if (this._playerArtist) {
-      this._playerArtist.textContent = this._currentTrack.artist_name;
+      this._playerArtist.textContent =
+        this._currentTrack.artist_name || "Unknown Artist";
     }
 
     // Highlight active track
@@ -309,25 +323,20 @@ class MusicPlayer {
     }
   }
 
-  // Play prev track
+  // Play prev track - ✅ FIX: Sửa logic so sánh
   _playPrevious() {
     if (this._playList.length === 0) return;
 
     // Nếu đang phát > 3s, restart track hiện tại
-    if ((this._audioElement.currentTime = 3)) {
+    if (this._audioElement.currentTime > 3) {
       this._audioElement.currentTime = 0;
       return;
     }
 
     // Ngược lại, phát track trước
-    if (this._isShuffleMode) {
-      this._playRandomTrack();
-    } else {
-      this._currentIndex =
-        (this._currentIndex - 1 + this._playList.length) %
-        this._playList.length;
-      this.loadTrack(this._playList[this._currentIndex], true);
-    }
+    this._currentIndex =
+      (this._currentIndex - 1 + this._playList.length) % this._playList.length;
+    this.loadTrack(this._playList[this._currentIndex], true);
   }
 
   // Toggle shuffle mode
@@ -360,13 +369,14 @@ class MusicPlayer {
     }
   }
 
+  // ✅ FIX: Sửa các lỗi logic
   _playRandomTrack() {
     if (this._playList.length === 0) return;
 
     // Thêm track hiện tại vào history
     if (
       this._currentIndex !== null &&
-      !this._playHistory.include(this._currentIndex)
+      !this._playHistory.includes(this._currentIndex)
     ) {
       this._playHistory.push(this._currentIndex);
     }
@@ -378,14 +388,14 @@ class MusicPlayer {
 
     // Lấy các index chưa phát
     const availableIndexes = [];
-    for (i = 0; i < this._playList.length; i++) {
-      if (!this._playHistory.include(i)) {
+    for (let i = 0; i < this._playList.length; i++) {
+      if (!this._playHistory.includes(i)) {
         availableIndexes.push(i);
       }
     }
 
     // Random từ available indexes
-    const randomIdx = Math.floor(Math.random() + availableIndexes.length); // Làm tròn xuống
+    const randomIdx = Math.floor(Math.random() * availableIndexes.length);
     this._currentIndex = availableIndexes[randomIdx];
 
     this._saveState("playHistory", this._playHistory);
@@ -417,8 +427,16 @@ class MusicPlayer {
 
     // Update time display
     if (this._currentTimeElement) {
-      this._currentTimeElement.textContent =
-        this.formatTrackDuration(currentTime);
+      this._currentTimeElement.textContent = formatTrackDuration(currentTime);
+    }
+  }
+
+  // Handle metadata loaded
+  _handleMetadataLoaded() {
+    if (this._durationElement) {
+      this._durationElement.textContent = formatTrackDuration(
+        this._audioElement.duration
+      );
     }
   }
 
@@ -519,6 +537,7 @@ class MusicPlayer {
     }
   }
 
+  // Public API
   getCurrentTrack() {
     return this._currentTrack;
   }
