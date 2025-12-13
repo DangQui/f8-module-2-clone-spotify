@@ -42,9 +42,16 @@ export async function renderTrendingTracks(
       }
     }
 
-    // Load playing vào music player
-    if (data.length > 0) {
+    // NEW: Chỉ load playlist nếu chưa có track nào đang phát
+    // Điều này tránh ghi đè track hiện tại khi navigate
+    const currentTrack = musicPlayer.getCurrentTrack();
+
+    if (data.length > 0 && !currentTrack) {
+      // Chỉ load playlist khi là lần đầu tiên (chưa có track)
       musicPlayer.loadPlaylist(data, 0);
+    } else if (data.length > 0) {
+      // Nếu đã có track, chỉ cập nhật playlist mà KHÔNG load track mới
+      musicPlayer.updatePlaylistOnly(data);
     }
 
     return data; // Return array tracks để main.js biết total

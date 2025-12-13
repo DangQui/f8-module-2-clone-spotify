@@ -28,8 +28,17 @@ async function resetToHomePage() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 
   try {
+    // NEW: Lưu trạng thái track hiện tại trước khi re-render
+    const currentPlaybackState = musicPlayer.getPlaybackState();
+    const hadTrackBefore = !!currentPlaybackState.track;
+
     await renderTrendingTracks(20, "#hits-track");
     await renderPopularArtists(15, 0);
+
+    // NEW: Chỉ khôi phục nếu có track trước đó, tránh load track mới
+    if (hadTrackBefore) {
+      musicPlayer.restorePlaybackState();
+    }
   } catch (error) {
     console.log("Lỗi khi re-render home page:", error);
   }
@@ -39,9 +48,14 @@ async function resetToHomePage() {
 function initHomeNavigation() {
   const logo = document.querySelector(".sidebar .logo");
   const homeBtn = document.querySelector(".home-btn");
+
   if (logo) {
     logo.addEventListener("click", (e) => {
       e.preventDefault();
+      // NEW: Lưu trạng thái trước khi navigate
+      const playbackState = musicPlayer.getPlaybackState();
+      console.log("Navigating to home, current playback:", playbackState);
+
       resetToHomePage();
     });
   }
@@ -49,6 +63,10 @@ function initHomeNavigation() {
   if (homeBtn) {
     homeBtn.addEventListener("click", (e) => {
       e.preventDefault();
+      // NEW: Lưu trạng thái trước khi navigate
+      const playbackState = musicPlayer.getPlaybackState();
+      console.log("Navigating to home, current playback:", playbackState);
+
       resetToHomePage();
     });
   }
@@ -86,6 +104,10 @@ document.addEventListener("DOMContentLoaded", checkAuthOnLoad);
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
+    // NEW: Lưu trạng thái track hiện tại trước khi render
+    const currentPlaybackState = musicPlayer.getPlaybackState();
+    const hadTrackBefore = !!currentPlaybackState.track;
+
     // Render trending vào #hits-track (truyền selector để render HTML)
     const trendingData = await renderTrendingTracks(20, "#hits-track");
     const artistsData = await renderPopularArtists(15, 0);
@@ -106,10 +128,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       artistsData.length,
       5
     );
+
+    // NEW: Chỉ khôi phục playback nếu đã có track trước đó
+    // Không cho renderTrendingTracks ghi đè lên track hiện tại
+    if (hadTrackBefore) {
+      setTimeout(() => {
+        musicPlayer.restorePlaybackState();
+      }, 500);
+    }
   } catch (error) {
     console.error("Render error:", error);
   } finally {
     document.body.classList.remove("loading");
-    // initPlayBtnAuthCheck();
   }
+});
+
+// NEW: Lưu trạng thái trước khi rời khỏi trang
+window.addEventListener("beforeunload", () => {
+  const playbackState = musicPlayer.getPlaybackState();
+  console.log("Page unloading, saving playback state:", playbackState);
 });

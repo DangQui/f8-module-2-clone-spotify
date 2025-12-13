@@ -28,6 +28,8 @@ class MusicPlayer {
     // DOM Element - Progress
     this._progressBar = document.querySelector(".progress-bar");
     this._progressFill = document.querySelector(".progress-fill");
+    this._progressHandle = document.querySelector(".progress-handle");
+    this._progressTooltip = null; // NEW: Tooltip element sẽ được tạo động
     this._currentTimeElement = document.querySelector(".time:first-of-type");
     this._durationElement = document.querySelector(".time:last-of-type");
 
@@ -35,6 +37,8 @@ class MusicPlayer {
     this._volumeBtn = document.querySelector(".volume-container .control-btn");
     this._volumeBar = document.querySelector(".volume-bar");
     this._volumeFill = document.querySelector(".volume-fill");
+    this._volumeHandle = document.querySelector(".volume-handle");
+    this._volumeTooltip = null; // NEW: Tooltip element sẽ được tạo động
 
     // State Management
     this._currentTrack = null;
@@ -42,6 +46,7 @@ class MusicPlayer {
     this._currentIndex = 0;
     this._isPlaying = false;
     this._isSeeking = false;
+    this._isVolumeChanging = false;
     this._volume = 0.7;
     this._isMuted = false;
     this._previousVolume = 0.7;
@@ -64,6 +69,12 @@ class MusicPlayer {
       document.body.appendChild(this._audioElement);
     }
 
+    // NEW: Tạo tooltip cho progress bar
+    this._createProgressTooltip();
+
+    // NEW: Tạo tooltip cho volume bar
+    this._createVolumeTooltip();
+
     // Set Volume ban đầu
     this._audioElement.volume = this._volume;
     this._updateVolumeUI();
@@ -79,6 +90,26 @@ class MusicPlayer {
     this._loadLastTrack();
   }
 
+  // NEW: Tạo tooltip cho progress bar
+  _createProgressTooltip() {
+    if (this._progressBar && !this._progressTooltip) {
+      this._progressTooltip = document.createElement("div");
+      this._progressTooltip.className = "progress-tooltip";
+      this._progressTooltip.textContent = "0:00";
+      this._progressBar.appendChild(this._progressTooltip);
+    }
+  }
+
+  // NEW: Tạo tooltip cho volume bar
+  _createVolumeTooltip() {
+    if (this._volumeBar && !this._volumeTooltip) {
+      this._volumeTooltip = document.createElement("div");
+      this._volumeTooltip.className = "volume-tooltip";
+      this._volumeTooltip.textContent = "70%";
+      this._volumeBar.appendChild(this._volumeTooltip);
+    }
+  }
+
   _setupEventListeners() {
     // Play/Pause
     this._playPauseBtn?.addEventListener("click", () =>
@@ -87,7 +118,7 @@ class MusicPlayer {
     this._audioElement?.addEventListener("play", () => this._handlePlay());
     this._audioElement?.addEventListener("pause", () => this._handlePause());
 
-    // Next/Prev - ✅ FIX: Sửa từ _toggleRepeat thành _playPrevious
+    // Next/Prev
     this._nextBtn?.addEventListener("click", () => this._playNext());
     this._prevBtn?.addEventListener("click", () => this._playPrevious());
 
@@ -102,18 +133,55 @@ class MusicPlayer {
     this._progressBar?.addEventListener("click", (e) =>
       this._handleProgressClick(e)
     );
+    // NEW: Thêm sự kiện hover để hiển thị tooltip
+    this._progressBar?.addEventListener("mouseenter", () => {
+      if (this._progressTooltip) {
+        this._progressTooltip.classList.add("show");
+      }
+    });
+    this._progressBar?.addEventListener("mouseleave", () => {
+      if (this._progressTooltip && !this._isSeeking) {
+        this._progressTooltip.classList.remove("show");
+      }
+    });
+    // NEW: Cập nhật tooltip position khi di chuyển chuột
+    this._progressBar?.addEventListener("mousemove", (e) => {
+      this._updateProgressTooltipPosition(e);
+    });
     document.addEventListener("mousemove", (e) =>
       this._handleProgressMouseMove(e)
     );
     document.addEventListener("mouseup", () => this._handleProgressMouseUp());
 
-    // Volume - ✅ FIX: Sửa từ this._volume thành this._volumeBar
+    // Volume
     this._volumeBtn?.addEventListener("click", () => this._toggleMute());
     this._volumeBar?.addEventListener("click", (e) =>
       this._handleVolumeClick(e)
     );
+    this._volumeBar?.addEventListener("mousedown", (e) =>
+      this._handleVolumeMouseDown(e)
+    );
+    // NEW: Thêm sự kiện hover để hiển thị tooltip
+    this._volumeBar?.addEventListener("mouseenter", () => {
+      if (this._volumeTooltip) {
+        this._volumeTooltip.classList.add("show");
+      }
+    });
+    this._volumeBar?.addEventListener("mouseleave", () => {
+      if (this._volumeTooltip && !this._isVolumeChanging) {
+        this._volumeTooltip.classList.remove("show");
+      }
+    });
+    // NEW: Cập nhật tooltip position khi di chuyển chuột
+    this._volumeBar?.addEventListener("mousemove", (e) => {
+      this._updateVolumeTooltipPosition(e);
+    });
+    document.addEventListener("mousemove", (e) =>
+      this._handleVolumeMouseMove(e)
+    );
+    document.addEventListener("mouseup", () => this._handleVolumeMouseUp());
 
-    // Time update - ✅ FIX: Thêm arrow function
+    // Time update
     this._audioElement.addEventListener("timeupdate", () =>
       this._handleTimeUpdate()
     );
@@ -124,6 +192,14 @@ class MusicPlayer {
       this._handleTrackEnded()
     );
 
+    // NEW: Lưu thời gian trước khi tắt/reload trang
+    window.addEventListener("beforeunload", () => {
+      if (this._currentTrack) {
+        this._saveState("lastPlaybackTime", this._audioElement.currentTime);
+        this._saveState("isPlaying", this._isPlaying);
+      }
+    });
+
     // Global track play events
     this._setupGlobalTrackEvents();
   }
@@ -132,7 +208,6 @@ class MusicPlayer {
   _setupGlobalTrackEvents() {
     // Lắng nghe click vào các nút play trên hit cards
     document.addEventListener("click", async (e) => {
-      // closest: tìm phần tử cha gần nhất có CSS Seclector là ".hit-play-btn"
       const playBtn = e.target.closest(".hit-play-btn");
       if (playBtn) {
         e.preventDefault();
@@ -186,7 +261,6 @@ class MusicPlayer {
 
   // Play
   play() {
-    // Kiểm tra đã có bài đang chọn và đường dẫn url của bài đó thì play
     if (this._currentTrack && this._audioElement.src) {
       this._audioElement.play().catch((error) => {
         console.error("Error playing audio:", error);
@@ -212,8 +286,9 @@ class MusicPlayer {
     // Update UI
     this._updatePlayerUI();
 
-    // Save to Localstorage
+    // NEW: Lưu track và thời gian phát hiện tại
     this._saveState("lastTrack", track);
+    this._saveState("lastPlaybackTime", 0); // Reset thời gian khi load track mới
 
     if (autoPlay) {
       this.play();
@@ -228,6 +303,26 @@ class MusicPlayer {
     if (this._playList.length > 0) {
       this.loadTrack(this._playList[this._currentIndex], false);
     }
+  }
+
+  // NEW: Cập nhật playlist mà KHÔNG load track mới (dùng khi navigate)
+  updatePlaylistOnly(tracks) {
+    this._playList = tracks || [];
+
+    // Tìm index của track hiện tại trong playlist mới
+    if (this._currentTrack) {
+      const newIndex = this._playList.findIndex(
+        (track) => track.id === this._currentTrack.id
+      );
+      if (newIndex !== -1) {
+        this._currentIndex = newIndex;
+      }
+    }
+
+    console.log(
+      "Playlist updated, current track preserved:",
+      this._currentTrack?.title
+    );
   }
 
   _updatePlayerUI() {
@@ -300,6 +395,8 @@ class MusicPlayer {
       this._playIcon.classList.remove("fa-play");
       this._playIcon.classList.add("fa-pause");
     }
+    // NEW: Lưu trạng thái đang phát
+    this._saveState("isPlaying", true);
   }
 
   // Handle pause event
@@ -309,6 +406,8 @@ class MusicPlayer {
       this._playIcon.classList.remove("fa-pause");
       this._playIcon.classList.add("fa-play");
     }
+    // NEW: Lưu trạng thái tạm dừng
+    this._saveState("isPlaying", false);
   }
 
   // Play next track
@@ -323,7 +422,7 @@ class MusicPlayer {
     }
   }
 
-  // Play prev track - ✅ FIX: Sửa logic so sánh
+  // Play prev track
   _playPrevious() {
     if (this._playList.length === 0) return;
 
@@ -369,7 +468,6 @@ class MusicPlayer {
     }
   }
 
-  // ✅ FIX: Sửa các lỗi logic
   _playRandomTrack() {
     if (this._playList.length === 0) return;
 
@@ -412,7 +510,7 @@ class MusicPlayer {
     }
   }
 
-  // Handle time update
+  // Handle time update - FIX: Cập nhật handle position
   _handleTimeUpdate() {
     if (this._isSeeking) return;
 
@@ -421,13 +519,16 @@ class MusicPlayer {
 
     // Update progress bar
     const progress = (currentTime / duration) * 100;
-    if (this._progressFill) {
-      this._progressFill.style.width = `${progress}%`;
-    }
+    this._updateProgressUI(progress);
 
     // Update time display
     if (this._currentTimeElement) {
       this._currentTimeElement.textContent = formatTrackDuration(currentTime);
+    }
+
+    // NEW: Lưu thời gian phát hiện tại mỗi 5 giây để tránh lưu quá nhiều
+    if (Math.floor(currentTime) % 5 === 0) {
+      this._saveState("lastPlaybackTime", currentTime);
     }
   }
 
@@ -440,28 +541,81 @@ class MusicPlayer {
     }
   }
 
-  // Handle progress bar click
+  // CHANGED: Handle progress bar click - Thêm cập nhật tooltip và lưu thời gian
   _handleProgressClick(e) {
     const rect = this._progressBar.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
+    const percent = Math.max(
+      0,
+      Math.min(1, (e.clientX - rect.left) / rect.width)
+    );
     this._audioElement.currentTime = percent * this._audioElement.duration;
+
+    // Cập nhật UI ngay lập tức (không có transition)
+    this._updateProgressUI(percent * 100);
+
+    // NEW: Cập nhật tooltip với thời gian hiện tại
+    if (this._progressTooltip) {
+      const time = percent * this._audioElement.duration;
+      this._progressTooltip.textContent = formatTrackDuration(time);
+    }
+
+    // NEW: Lưu thời gian mới sau khi tua
+    this._saveState("lastPlaybackTime", this._audioElement.currentTime);
   }
 
   // Handle progress mousedown
   _handleProgressMouseDown(e) {
     this._isSeeking = true;
     this._handleProgressClick(e);
+    // NEW: Hiển thị tooltip khi đang kéo
+    if (this._progressTooltip) {
+      this._progressTooltip.classList.add("show");
+    }
   }
 
-  // Handle progress mousemove
+  // CHANGED: Handle progress mousemove - Cập nhật tooltip khi kéo
   _handleProgressMouseMove(e) {
     if (!this._isSeeking) return;
     this._handleProgressClick(e);
   }
 
-  // Handle progress mouseup
+  // CHANGED: Handle progress mouseup - Ẩn tooltip sau khi thả chuột
   _handleProgressMouseUp() {
-    this._isSeeking = false;
+    if (this._isSeeking) {
+      this._isSeeking = false;
+      // NEW: Ẩn tooltip sau khi kéo xong
+      if (this._progressTooltip) {
+        this._progressTooltip.classList.remove("show");
+      }
+    }
+  }
+
+  // NEW: Cập nhật vị trí và nội dung tooltip khi hover
+  _updateProgressTooltipPosition(e) {
+    if (!this._progressTooltip || !this._audioElement.duration) return;
+
+    const rect = this._progressBar.getBoundingClientRect();
+    const percent = Math.max(
+      0,
+      Math.min(1, (e.clientX - rect.left) / rect.width)
+    );
+    const time = percent * this._audioElement.duration;
+
+    // Cập nhật nội dung tooltip
+    this._progressTooltip.textContent = formatTrackDuration(time);
+
+    // Cập nhật vị trí tooltip
+    this._progressTooltip.style.left = `${percent * 100}%`;
+  }
+
+  // CHANGED: Update progress UI - Loại bỏ transition
+  _updateProgressUI(progress) {
+    if (this._progressFill) {
+      this._progressFill.style.width = `${progress}%`;
+    }
+    if (this._progressHandle) {
+      this._progressHandle.style.left = `${progress}%`;
+    }
   }
 
   // Toggle mute
@@ -479,20 +633,85 @@ class MusicPlayer {
     this._updateVolumeUI();
   }
 
-  // Handle volume click
+  // CHANGED: Handle volume click - Thêm cập nhật tooltip
   _handleVolumeClick(e) {
     const rect = this._volumeBar.getBoundingClientRect();
-    const percent = (e.clientX - rect.left) / rect.width;
-    this._volume = Math.max(0, Math.min(1, percent));
+    const percent = Math.max(
+      0,
+      Math.min(1, (e.clientX - rect.left) / rect.width)
+    );
+    this._volume = percent;
     this._audioElement.volume = this._volume;
     this._isMuted = this._volume === 0;
     this._updateVolumeUI();
+
+    // NEW: Cập nhật tooltip
+    if (this._volumeTooltip) {
+      this._volumeTooltip.textContent = `${Math.round(percent * 100)}%`;
+    }
   }
 
-  // Update volume UI
+  // Handle volume mousedown
+  _handleVolumeMouseDown(e) {
+    this._isVolumeChanging = true;
+    this._handleVolumeClick(e);
+    // NEW: Hiển thị tooltip khi đang kéo
+    if (this._volumeTooltip) {
+      this._volumeTooltip.classList.add("show");
+    }
+  }
+
+  // CHANGED: Handle volume mousemove - Cập nhật tooltip khi kéo
+  _handleVolumeMouseMove(e) {
+    if (!this._isVolumeChanging) return;
+    this._handleVolumeClick(e);
+  }
+
+  // CHANGED: Handle volume mouseup - Ẩn tooltip sau khi thả chuột
+  _handleVolumeMouseUp() {
+    if (this._isVolumeChanging) {
+      this._isVolumeChanging = false;
+      // NEW: Ẩn tooltip sau khi kéo xong
+      if (this._volumeTooltip) {
+        this._volumeTooltip.classList.remove("show");
+      }
+    }
+  }
+
+  // NEW: Cập nhật vị trí và nội dung tooltip khi hover
+  _updateVolumeTooltipPosition(e) {
+    if (!this._volumeTooltip) return;
+
+    const rect = this._volumeBar.getBoundingClientRect();
+    const percent = Math.max(
+      0,
+      Math.min(1, (e.clientX - rect.left) / rect.width)
+    );
+
+    // Cập nhật nội dung tooltip
+    this._volumeTooltip.textContent = `${Math.round(percent * 100)}%`;
+
+    // Cập nhật vị trí tooltip
+    this._volumeTooltip.style.left = `${percent * 100}%`;
+  }
+
+  // CHANGED: Update volume UI - Loại bỏ transition
   _updateVolumeUI() {
+    const volumePercent = this._volume * 100;
+
     if (this._volumeFill) {
-      this._volumeFill.style.width = `${this._volume * 100}%`;
+      this._volumeFill.style.width = `${volumePercent}%`;
+    }
+
+    // Update handle position
+    if (this._volumeHandle) {
+      this._volumeHandle.style.left = `${volumePercent}%`;
+    }
+
+    // NEW: Cập nhật tooltip
+    if (this._volumeTooltip) {
+      this._volumeTooltip.textContent = `${Math.round(volumePercent)}%`;
+      this._volumeTooltip.style.left = `${volumePercent}%`;
     }
 
     if (this._volumeBtn) {
@@ -508,11 +727,48 @@ class MusicPlayer {
     }
   }
 
-  // Load last track form localStorage
+  // NEW: Load last track và phục hồi trạng thái phát từ localStorage
   _loadLastTrack() {
     const lastTrack = this._loadState("lastTrack");
+    const lastPlaybackTime = this._loadState("lastPlaybackTime", 0);
+    const wasPlaying = this._loadState("isPlaying", false);
+
     if (lastTrack) {
       this._currentTrack = lastTrack;
+
+      // Set audio source
+      if (lastTrack.audio_url) {
+        this._audioElement.src = lastTrack.audio_url;
+
+        // CHANGED: Sử dụng cả loadedmetadata và canplay để đảm bảo
+        const restorePlayback = () => {
+          // Khôi phục thời gian phát
+          if (
+            lastPlaybackTime &&
+            lastPlaybackTime < this._audioElement.duration
+          ) {
+            this._audioElement.currentTime = lastPlaybackTime;
+            console.log(`Restored playback time: ${lastPlaybackTime}s`);
+          }
+
+          // Tự động phát lại nếu trước đó đang phát
+          if (wasPlaying) {
+            // Đợi một chút để đảm bảo currentTime đã được set
+            setTimeout(() => {
+              this.play();
+              console.log(
+                `Auto-playing from ${this._audioElement.currentTime}s`
+              );
+            }, 100);
+          }
+        };
+
+        // Lắng nghe cả 2 sự kiện để đảm bảo
+        this._audioElement.addEventListener("loadedmetadata", restorePlayback, {
+          once: true,
+        });
+      }
+
       this._updatePlayerUI();
     }
   }
@@ -534,6 +790,27 @@ class MusicPlayer {
     } catch (error) {
       console.error("Error loading state:", error);
       return defaultValue;
+    }
+  }
+
+  // NEW: Public method để lấy trạng thái phát nhạc (dùng cho navigation)
+  getPlaybackState() {
+    return {
+      track: this._currentTrack,
+      isPlaying: this._isPlaying,
+      currentTime: this._audioElement.currentTime,
+      duration: this._audioElement.duration,
+    };
+  }
+
+  // NEW: Public method để khôi phục trạng thái phát nhạc (dùng cho navigation)
+  restorePlaybackState() {
+    const wasPlaying = this._loadState("isPlaying", false);
+
+    // CHANGED: Chỉ play nếu chưa đang phát và cần phát lại
+    if (wasPlaying && this._currentTrack && !this._isPlaying) {
+      console.log("Restoring playback state...");
+      this.play();
     }
   }
 
