@@ -256,6 +256,70 @@ export function initAuthModal() {
     }
   });
 
+  // Kiểm tra các nút Player Footer
+  const playerControls = document.querySelectorAll(
+    ".player-center .control-btn, .player-center .play-btn"
+  );
+
+  playerControls.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        e.preventDefault();
+        e.stopPropagation();
+        showLoginForm();
+        openModal();
+        return;
+      }
+    });
+  });
+
+  // Kiểm tra progress bar
+  const progressBar = document.querySelector(".progress-bar");
+  if (progressBar) {
+    progressBar.addEventListener("mousedown", (e) => {
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        e.preventDefault();
+        e.stopPropagation();
+        showLoginForm;
+        openModal();
+      }
+    });
+  }
+
+  // Kiểm tra volume controls
+  const volumeBtn = document.querySelector(".volume-container .control-btn");
+  const volumeBar = document.querySelector(".volume-bar");
+
+  if (volumeBtn) {
+    volumeBtn.addEventListener("click", (e) => {
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        e.preventDefault();
+        e.stopPropagation();
+        showLoginForm();
+        openModal();
+      }
+    });
+  }
+
+  if (volumeBar) {
+    volumeBar.addEventListener("mousedown", (e) => {
+      const accessToken = localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        e.preventDefault();
+        e.stopPropagation();
+        showLoginForm();
+        openModal();
+      }
+    });
+  }
+
   // InitAuthModal
   const createPlaylistBtn = document.querySelector(".create-playlist-btn");
   const topCreateBtn = document.querySelector(".create-btn");
@@ -267,12 +331,11 @@ export function initAuthModal() {
     );
 
     if (target) {
-      e.preventDefault();
-      e.stopPropagation();
-
       const accessToken = localStorage.getItem("accessToken");
 
       if (!accessToken) {
+        e.preventDefault();
+        e.stopPropagation();
         showLoginForm();
         openModal();
         return;
