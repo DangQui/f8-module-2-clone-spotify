@@ -247,7 +247,8 @@ class MusicPlayer {
 
   // Tìm track trong playlist
   _findTrackById(trackId) {
-    return this._playList.find((track) => track.id === parseInt(trackId));
+    const track = this._playList.find((track) => track.id === trackId);
+    return track;
   }
 
   // Toggle Play/Pause

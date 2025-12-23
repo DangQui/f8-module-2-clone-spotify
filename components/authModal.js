@@ -3,6 +3,7 @@
 import { setupBlurValidation } from "../utils/validation.js";
 import httpRequest from "../utils/httpRequest.js";
 import { checkAuthOnLoad } from "../services/authService.js";
+import musicPlayer from "./musicPlayer.js";
 
 export function initAuthModal() {
   // Lấy các phần tử DOM
@@ -261,33 +262,87 @@ export function initAuthModal() {
     ".player-center .control-btn, .player-center .play-btn"
   );
 
-  playerControls.forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      const accessToken = localStorage.getItem("accessToken");
+  // Lưu trạng thái hiện tại để revert (cho next/prev)
+  let previousTrack = musicPlayer ? musicPlayer._audioElement : null;
 
-      if (!accessToken) {
-        e.preventDefault();
-        e.stopPropagation();
-        showLoginForm();
-        openModal();
-        return;
-      }
-    });
+  playerControls.forEach((btn) => {
+    btn.addEventListener(
+      "click",
+      (e) => {
+        const accessToken = localStorage.getItem("accessToken");
+
+        if (!accessToken) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+
+          if (musicPlayer) {
+            musicPlayer.pause();
+            musicPlayer._audioElement?.pause(); // Safe access để tránh lỗi nếu chưa init
+
+            // Detect và reset shuffle/repeat nếu click nút đó
+            if (
+              btn.classList.contains("active") ||
+              btn.querySelector("i.fa-random") ||
+              btn.querySelector("i.fa-redo")
+            ) {
+              musicPlayer._isShuffleMode = false;
+              musicPlayer._isRepeatMode = false;
+              musicPlayer._saveState("isShuffleMode", false);
+              musicPlayer._saveState("isRepeatMode", false);
+              musicPlayer._updateShuffleUI();
+              musicPlayer._updateRepeatUI();
+              // Remove class active từ btn
+              btn.classList.remove("active");
+            }
+
+            // Reset UI cho next/prev
+            if (previousTrack && musicPlayer._currentTrack !== previousTrack) {
+              musicPlayer._currentTrack = previousTrack;
+              musicPlayer._updatePlayerUI();
+              musicPlayer._highlightActiveTrack();
+            }
+            previousTrack = musicPlayer._currentTrack; // Update để lần sau
+          }
+
+          showLoginForm();
+          openModal();
+          return;
+        }
+      },
+      { capture: true } // Chạy trước musicPlayer bubbling
+    );
   });
 
   // Kiểm tra progress bar
   const progressBar = document.querySelector(".progress-bar");
   if (progressBar) {
-    progressBar.addEventListener("mousedown", (e) => {
-      const accessToken = localStorage.getItem("accessToken");
+    progressBar.addEventListener(
+      "mousedown",
+      (e) => {
+        const accessToken = localStorage.getItem("accessToken");
 
-      if (!accessToken) {
-        e.preventDefault();
-        e.stopPropagation();
-        showLoginForm;
-        openModal();
-      }
-    });
+        if (!accessToken) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+
+          if (musicPlayer) {
+            musicPlayer.pause();
+            musicPlayer._audioElement?.pause(); // Safe access để tránh lỗi nếu chưa init
+            // Reset currentTime về 0 nếu không có track
+            if (musicPlayer._currentTrack && musicPlayer._audioElement) {
+              musicPlayer._audioElement.currentTime = 0;
+              musicPlayer._updateProgressUI(0); // Update UI ngay
+            }
+          }
+          showLoginForm();
+          openModal();
+          return;
+        }
+      },
+      { capture: true }
+    );
   }
 
   // Kiểm tra volume controls
@@ -295,29 +350,72 @@ export function initAuthModal() {
   const volumeBar = document.querySelector(".volume-bar");
 
   if (volumeBtn) {
-    volumeBtn.addEventListener("click", (e) => {
-      const accessToken = localStorage.getItem("accessToken");
+    volumeBtn.addEventListener(
+      "click",
+      (e) => {
+        const accessToken = localStorage.getItem("accessToken");
 
-      if (!accessToken) {
-        e.preventDefault();
-        e.stopPropagation();
-        showLoginForm();
-        openModal();
-      }
-    });
+        if (!accessToken) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+
+          if (musicPlayer) {
+            musicPlayer.pause();
+            musicPlayer._audioElement?.pause();
+          }
+
+          // Reset volume về default và update UI
+          if (musicPlayer) {
+            musicPlayer._volume = 0.7;
+            musicPlayer._isMuted = false;
+            if (musicPlayer._audioElement) {
+              musicPlayer._audioElement.volume = 0.7;
+            }
+            musicPlayer._updateVolumeUI();
+          }
+
+          showLoginForm();
+          openModal();
+          return;
+        }
+      },
+      { capture: true }
+    );
   }
 
   if (volumeBar) {
-    volumeBar.addEventListener("mousedown", (e) => {
-      const accessToken = localStorage.getItem("accessToken");
+    volumeBar.addEventListener(
+      "mousedown",
+      (e) => {
+        const accessToken = localStorage.getItem("accessToken");
 
-      if (!accessToken) {
-        e.preventDefault();
-        e.stopPropagation();
-        showLoginForm();
-        openModal();
-      }
-    });
+        if (!accessToken) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+
+          if (musicPlayer) {
+            musicPlayer.pause();
+            musicPlayer._audioElement.pause();
+          }
+
+          if (musicPlayer) {
+            musicPlayer._volume = 0.7;
+            musicPlayer._isMuted = false;
+            if (musicPlayer._audioElement) {
+              musicPlayer._audioElement.volume = 0.7;
+            }
+            musicPlayer._updateVolumeUI();
+          }
+
+          showLoginForm();
+          openModal();
+          return;
+        }
+      },
+      { capture: true }
+    );
   }
 
   // InitAuthModal
@@ -325,6 +423,7 @@ export function initAuthModal() {
   const topCreateBtn = document.querySelector(".create-btn");
   const browsePodcastsBtn = document.querySelector(".browse-podcasts-btn");
 
+  // Reset shuffle/repeat mode về false khi chưa login
   document.addEventListener("click", (e) => {
     const target = e.target.closest(
       ".hit-play-btn, .artist-play-btn, .play-btn-large"
@@ -336,6 +435,13 @@ export function initAuthModal() {
       if (!accessToken) {
         e.preventDefault();
         e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        if (musicPlayer) {
+          musicPlayer.pause();
+          musicPlayer._audioElement?.pause();
+        }
+
         showLoginForm();
         openModal();
         return;
