@@ -418,6 +418,65 @@ export function initAuthModal() {
     );
   }
 
+  document.addEventListener("player:play", (e) => {
+    const { trackId, isPlaying } = e.detail;
+    console.log("Player play event:", trackId, isPlaying);
+
+    // Update icon cho hit-play-btn
+    const activePlayBtn = document.querySelector(
+      `.hit-play-btn[data-track-id="${trackId}"]`
+    );
+    if (activePlayBtn) {
+      const icon = activePlayBtn.querySelector("i");
+      if (icon && isPlaying) {
+        icon.classList.remove("fa-play");
+        icon.classList.add("fa-pause");
+        activePlayBtn.classList.add("playing");
+      }
+    }
+  });
+
+  document.addEventListener("player:pause", (e) => {
+    const { trackId, isPlaying } = e.detail;
+    console.log("Player pause event:", trackId, isPlaying);
+
+    const allPlayBtns = document.querySelectorAll(
+      ".hit-play-btn, .artist-play-btn"
+    );
+    allPlayBtns.forEach((btn) => {
+      const icon = btn.querySelector("i");
+      if (icon) {
+        icon.classList.remove("fa-pause");
+        icon.classList.add("fa-play");
+        activePlayBtn.classList.remove("playing");
+      }
+    });
+  });
+
+  document.addEventListener("player:trackchange", (e) => {
+    const { trackId } = e.detail;
+
+    // Revert tất cả, trử nút match track mới (nếu đang play)
+    const allPlayBtns = document.querySelectorAll(
+      ".hit-play-btn, .artist-play-btn"
+    );
+    allPlayBtns.forEach((btn) => {
+      const icon = btn.querySelector("i");
+      const btnTrackId = btn.dataset.trackId;
+      if (icon) {
+        icon.classList.remove("fa-pause");
+        icon.classList.add("fa-play");
+        btn.classList.remove("playing");
+
+        if (btnTrackId === trackId && musicPlayer._isPlaying) {
+          icon.classList.remove("fa-play");
+          icon.classList.add("fa-pause");
+          btn.classList.add("playing");
+        }
+      }
+    });
+  });
+
   // InitAuthModal
   const createPlaylistBtn = document.querySelector(".create-playlist-btn");
   const topCreateBtn = document.querySelector(".create-btn");
@@ -451,11 +510,27 @@ export function initAuthModal() {
       if (target.classList.contains("hit-play-btn")) {
         const trackId = target.dataset.trackId;
         console.log("Play track:", trackId);
-        // Gọi hàm play track
+
+        // if (musicPlayer) {
+        //   musicPlayer._playTrackById(trackId);
+        //   // Update icon tạm ngay khi click
+        //   const icon = target.querySelector("i");
+        //   if (icon) {
+        //     icon.classList.remove("fa-play");
+        //     icon.classList.add("fa-pause");
+        //     target.classList.add("playing");
+        //   }
+        // }
       } else if (target.classList.contains("artist-play-btn")) {
         const artistId = target.dataset.artistId;
         console.log("Play artist:", artistId);
-        // Gọi hàm play artist
+        // Update icon tạm ngay khi click
+        // const icon = target.querySelector("i");
+        // if (icon) {
+        //   icon.classList.remove("fa-play");
+        //   icon.classList.add("fa-pause");
+        //   target.classList.add("playing");
+        // }
       }
     }
   });

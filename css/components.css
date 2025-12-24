@@ -1175,6 +1175,31 @@
   margin-left: 2px;
 }
 
+/* FIXED: Thêm style cho trạng thái playing của nút play (không ảnh hưởng hover/active cũ) */
+.hit-play-btn.playing,
+.artist-play-btn.playing {
+  background-color: var(--accent-hover); /* Highlight nhẹ khi đang play */
+  animation: pulse 2s infinite; /* Optional: Animation nhẹ để chỉ trạng thái active */
+}
+
+.hit-play-btn.playing i.fa-pause,
+.artist-play-btn.playing i.fa-pause {
+  color: var(--bg-primary); /* Đảm bảo icon pause nổi bật khi active */
+}
+
+/* Optional: Animation pulse cho nút đang play (chỉ áp dụng khi .playing) */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(29, 185, 84, 0.7); /* Xanh Spotify-like */
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(29, 185, 84, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(29, 185, 84, 0);
+  }
+}
+
 /* Card Info */
 .hit-card-info,
 .artist-card-info {

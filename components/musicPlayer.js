@@ -230,6 +230,12 @@ class MusicPlayer {
     });
   }
 
+  emitEvent(eventType, detail = {}) {
+    const event = new CustomEvent(eventType, { detail });
+    document.dispatchEvent(event);
+    console.log(`Event emitted: ${eventType}`, detail);
+  }
+
   async _playTrackById(trackId) {
     try {
       await playTrack(trackId);
@@ -237,8 +243,7 @@ class MusicPlayer {
       // Load track hoặc tìm track từ playList hiện tại
       const track = this._findTrackById(trackId);
       if (track) {
-        this.loadTrack(track);
-        this.play();
+        this.loadTrack(track, true);
       }
     } catch (error) {
       console.error("Error playing track:", error);
@@ -286,6 +291,12 @@ class MusicPlayer {
 
     // Update UI
     this._updatePlayerUI();
+
+    // Emit Trackchange
+    this.emitEvent("player:trackchange", {
+      trackId: track.id,
+      title: track.title,
+    });
 
     // NEW: Lưu track và thời gian phát hiện tại
     this._saveState("lastTrack", track);
@@ -398,6 +409,10 @@ class MusicPlayer {
     }
     // NEW: Lưu trạng thái đang phát
     this._saveState("isPlaying", true);
+    this.emitEvent("player:play", {
+      trackId: this._currentTrack?.id,
+      isPlaying: true,
+    });
   }
 
   // Handle pause event
@@ -409,6 +424,10 @@ class MusicPlayer {
     }
     // NEW: Lưu trạng thái tạm dừng
     this._saveState("isPlaying", false);
+    this.emitEvent("player:pause", {
+      trackId: this._currentTrack?.id,
+      isPlaying: false,
+    });
   }
 
   // Play next track
