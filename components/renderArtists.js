@@ -5,8 +5,10 @@ import {
 } from "../services/artistService.js";
 import { formatMonthlyListeners } from "../utils/numberFormat.js";
 import { formatTrackDuration } from "../utils/timeFormat.js";
+import musicPlayer from "./musicPlayer.js";
+import { syncHitPlayIcons, renderTrendingTracks } from "./renderTracks.js";
 
-let handelArtistClick = null;
+let handleArtistClick = null;
 
 const hitSection = document.querySelector(".hits-section");
 const artistSection = document.querySelector(".artists-section");
@@ -47,7 +49,7 @@ async function renderArtistHero(artistData) {
 }
 
 // Hàm xử lý render popular track
-async function renderArtistPopularTracks(artistId, limit = 10) {
+export async function renderArtistPopularTracks(artistId, limit = 10) {
   try {
     const response = await fetchArtistPopularTracks(artistId);
     const tracks = response.tracks || [];
@@ -55,7 +57,7 @@ async function renderArtistPopularTracks(artistId, limit = 10) {
 
     if (response.pagination.total === 0) {
       trackList.innerHTML = `<p class="no-data">No popular tracks!</p>`;
-      return;
+      return [];
     }
 
     trackList.innerHTML = ""; // Clear toàn bộ nội dung cũ trong .track-list
@@ -85,15 +87,19 @@ async function renderArtistPopularTracks(artistId, limit = 10) {
       `;
       trackList.appendChild(trackItem);
     });
+
+    return tracks;
   } catch (error) {
     console.error("Error rendering artist popular tracks:", error);
     const trackList = document.querySelector(".popular-section .track-list");
     if (trackList)
       trackList.innerHTML = `<p class="no-data">Error loading tracks</p>`;
+
+    return [];
   }
 }
 
-handelArtistClick = async (e) => {
+handleArtistClick = async (e) => {
   const card = e.target.closest(".hit-card[data-artist-id]");
   const playBtn = e.target.closest(".artist-play-btn");
 
@@ -104,6 +110,10 @@ handelArtistClick = async (e) => {
   popularSection.classList.add("show");
 
   window.scrollTo({ top: 0, behavior: "smooth" });
+
+  if (musicPlayer && musicPlayer._isPlaying) {
+    syncHitPlayIcons();
+  }
 
   // Kiểm tra click vào card hay vào playBtn
   if (card || playBtn) {
@@ -150,10 +160,10 @@ export async function renderPopularArtists(limit = 20, offset = 0) {
         )
         .join("");
 
-      if (handelArtistClick)
-        artist.removeEventListener("click", handelArtistClick);
+      if (handleArtistClick)
+        artist.removeEventListener("click", handleArtistClick);
 
-      artist.addEventListener("click", handelArtistClick);
+      artist.addEventListener("click", handleArtistClick);
 
       // artist.querySelectorAll(".artist-play-btn").forEach((btn) => {
       //   btn.addEventListener("click", (e) => {
@@ -174,4 +184,42 @@ export async function renderPopularArtists(limit = 20, offset = 0) {
       return [];
     }
   }
+}
+
+// Hàm navigate về home (toggle ngược sections + refresh hits + sync UI)
+function goToHome() {
+  hitSection.classList.add("show");
+  artistSection.classList.add("show");
+  artistHero.classList.remove("show");
+  artistControls.classList.remove("show");
+  popularSection.classList.remove("show");
+
+  renderTrendingTracks(20, "#hits-container")
+    .then(() => {
+      if (musicPlayer) {
+        musicPlayer._updatePlayerUI();
+      }
+    })
+    .catch((error) => {
+      console.error("Error refreshing home:", error);
+    });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+const homeBtn = document.querySelector(".home-btn");
+const logoIcon = document.querySelector(".logo-icon");
+
+if (homeBtn) {
+  homeBtn.addEventListener("click", (e) => {
+    e.preventDefault(); // Nếu là link
+    goToHome();
+  });
+}
+
+if (logoIcon) {
+  logoIcon.addEventListener("click", (e) => {
+    e.preventDefault();
+    goToHome();
+  });
 }

@@ -43,6 +43,7 @@ class MusicPlayer {
     // State Management
     this._currentTrack = null;
     this._playList = [];
+    this._currentPlayListType = null; // Thêm state để track type playlist
     this._currentIndex = 0;
     this._isPlaying = false;
     this._isSeeking = false;
@@ -208,17 +209,6 @@ class MusicPlayer {
   _setupGlobalTrackEvents() {
     // Lắng nghe click vào các nút play trên hit cards
     document.addEventListener("click", async (e) => {
-      const playBtn = e.target.closest(".hit-play-btn");
-      if (playBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const trackId = playBtn.dataset.trackId;
-        if (trackId) {
-          await this._playTrackById(trackId);
-        }
-      }
-
       // Lắng nghe click vào track items
       const trackItem = e.target.closest(".track-item");
       if (trackItem && !e.target.closest(".track-menu-btn")) {
@@ -238,13 +228,26 @@ class MusicPlayer {
 
   async _playTrackById(trackId) {
     try {
-      await playTrack(trackId);
-
       // Load track hoặc tìm track từ playList hiện tại
       const track = this._findTrackById(trackId);
-      if (track) {
-        this.loadTrack(track, true);
+      if (!track) {
+        console.error("Track not found in playlist:", trackId);
+        return;
       }
+
+      // Toggle: Nếu đang play track này -> pause; else load + play
+      if (this._currentTrack?.id === trackId) {
+        if (this._isPlaying) {
+          this.pause();
+        } else {
+          this.play();
+        }
+        return;
+      }
+
+      // Không phải current -> play mới
+      await playTrack(trackId);
+      this.loadTrack(track, true);
     } catch (error) {
       console.error("Error playing track:", error);
     }
@@ -308,18 +311,25 @@ class MusicPlayer {
   }
 
   // Load Playlist
-  loadPlaylist(tracks, startIndex = 0) {
+  loadPlaylist(tracks, startIndex = 0, playListType = "trending") {
     this._playList = tracks || [];
     this._currentIndex = startIndex;
+    this._currentPlayListType = playListType;
 
     if (this._playList.length > 0) {
-      this.loadTrack(this._playList[this._currentIndex], false);
+      this.loadTrack(this._playList[this._currentIndex], true);
     }
   }
 
+  // Check nếu playlist hiện tại là của artist
+  isCurrentPlaylistForArtist(artistId) {
+    return this._currentPlayListType === `artist:${artistId}`;
+  }
+
   // NEW: Cập nhật playlist mà KHÔNG load track mới (dùng khi navigate)
-  updatePlaylistOnly(tracks) {
+  updatePlaylistOnly(tracks, playListType = "trending") {
     this._playList = tracks || [];
+    this._currentPlayListType = playListType;
 
     // Tìm index của track hiện tại trong playlist mới
     if (this._currentTrack) {

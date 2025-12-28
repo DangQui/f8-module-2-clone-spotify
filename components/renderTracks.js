@@ -4,6 +4,35 @@ import {
 } from "../services/tracksService.js";
 import musicPlayer from "./musicPlayer.js";
 
+// Hàm để sync icons cho tất cả hit-play-btn dựa trên current player state
+export function syncHitPlayIcons() {
+  const allHitBtns = document.querySelectorAll(".hit-play-btn[data-track-id]");
+  allHitBtns.forEach((btn) => {
+    const icon = btn.querySelector("i");
+    const trackId = btn.dataset.trackId;
+    if (icon) {
+      // Revert tất cả về play
+      icon.classList.remove("fa-pause");
+      icon.classList.add("fa-play");
+      btn.classList.remove("playing");
+
+      // Nếu match current track và đang playing -> Set pause + playing
+      if (
+        musicPlayer &&
+        musicPlayer._currentTrack?.id === trackId &&
+        musicPlayer._isPlaying
+      ) {
+        icon.classList.remove("fa-play");
+        icon.classList.add("fa-pause");
+        btn.classList.remove("playing");
+      }
+    }
+  });
+  if (musicPlayer) {
+    musicPlayer._highlightActiveTrack();
+  }
+}
+
 // Render danh sách bài hát trending (cho carousel, dùng service + render nếu có selector)
 export async function renderTrendingTracks(
   limit = 20,
@@ -42,7 +71,6 @@ export async function renderTrendingTracks(
       }
     }
 
-    // NEW: Chỉ load playlist nếu chưa có track nào đang phát
     // Điều này tránh ghi đè track hiện tại khi navigate
     const currentTrack = musicPlayer.getCurrentTrack();
 
@@ -54,6 +82,7 @@ export async function renderTrendingTracks(
       musicPlayer.updatePlaylistOnly(data);
     }
 
+    syncHitPlayIcons();
     return data; // Return array tracks để main.js biết total
   } catch (error) {
     console.error("Error rendering trending tracks:", error);
