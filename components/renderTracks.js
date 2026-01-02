@@ -28,6 +28,29 @@ export function syncHitPlayIcons() {
       }
     }
   });
+
+  const allArtistBtns = document.querySelectorAll(
+    ".artist-play-btn[data-artist-id]"
+  );
+  allArtistBtns.forEach((btn) => {
+    const artistId = btn.dataset.artistId;
+    const icon = btn.querySelector("i");
+
+    if (icon) {
+      // Reset về play
+      icon.classList.remove("fa-pause");
+      icon.classList.add("fa-play");
+      btn.classList.remove("playing");
+
+      // Nếu đang play từ artist này -> Set pause
+      if (musicPlayer.isPlayingFromArtist(artistId) && musicPlayer._isPlaying) {
+        icon.classList.remove("fa-play");
+        icon.classList.add("fa-pause");
+        btn.classList.add("playing");
+      }
+    }
+  });
+
   if (musicPlayer) {
     musicPlayer._highlightActiveTrack();
   }
@@ -73,13 +96,17 @@ export async function renderTrendingTracks(
 
     // Điều này tránh ghi đè track hiện tại khi navigate
     const currentTrack = musicPlayer.getCurrentTrack();
+    const currentPlayListType = musicPlayer.getCurrentPlaylistType();
 
-    if (data.length > 0 && !currentTrack) {
-      // Chỉ load playlist khi là lần đầu tiên (chưa có track)
-      musicPlayer.loadPlaylist(data, 0);
-    } else if (data.length > 0) {
-      // Nếu đã có track, chỉ cập nhật playlist mà KHÔNG load track mới
-      musicPlayer.updatePlaylistOnly(data);
+    // Chỉ update playlist nếu không chạy artist
+    if (!currentPlayListType || !currentPlayListType.startsWith("artist:")) {
+      if (data.length > 0 && !currentTrack) {
+        // Chỉ load playlist khi là lần đầu tiên (chưa có track)
+        musicPlayer.loadPlaylist(data, 0);
+      } else if (data.length > 0) {
+        // Nếu đã có track, chỉ cập nhật playlist mà KHÔNG load track mới
+        musicPlayer.updatePlaylistOnly(data);
+      }
     }
 
     syncHitPlayIcons();

@@ -9,6 +9,7 @@ import musicPlayer from "./musicPlayer.js";
 import { syncHitPlayIcons, renderTrendingTracks } from "./renderTracks.js";
 
 let handleArtistClick = null;
+let currentArtistId = null; // Track artist hiện tại
 
 const hitSection = document.querySelector(".hits-section");
 const artistSection = document.querySelector(".artists-section");
@@ -99,9 +100,54 @@ export async function renderArtistPopularTracks(artistId, limit = 10) {
   }
 }
 
+// Setup event listner cho play-btn-large
+function setupPlayBtnLarge() {
+  const playLargeBtn = document.querySelector(".play-btn-large");
+  if (!playLargeBtn) return;
+
+  // Remove old listeners
+  const newPlayBtn = playLargeBtn.cloneNode(true);
+  playLargeBtn.parentNode.replaceChild(newPlayBtn, playLargeBtn);
+
+  newPlayBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!currentArtistId) return;
+
+    // Case 1: Đang playlist của artist này -> toggle
+    if (musicPlayer.isPlayingFromArtist(currentArtistId)) {
+      if (musicPlayer._isPlaying) {
+        musicPlayer.pause();
+      } else {
+        musicPlayer.play();
+      }
+      return;
+    }
+
+    // Case 2: Chưa có hoặc artist khác => load playlist
+    try {
+      const tracks = await renderArtistPopularTracks(currentArtistId);
+      if (tracks.length > 0) {
+        musicPlayer.loadPlaylist(tracks, 0, `artist:${currentArtistId}`);
+        musicPlayer.play();
+      } else {
+        console.warn("No track for artist:", currentArtistId);
+      }
+    } catch (error) {
+      console.error("Error loading artist tracks:", error);
+    }
+  });
+}
+
 handleArtistClick = async (e) => {
   const card = e.target.closest(".hit-card[data-artist-id]");
   const playBtn = e.target.closest(".artist-play-btn");
+
+  // Nếu click vào artist-play-btn, không navigate
+  if (playBtn) {
+    return;
+  }
 
   hitSection.classList.remove("show");
   artistSection.classList.remove("show");
@@ -115,17 +161,19 @@ handleArtistClick = async (e) => {
     syncHitPlayIcons();
   }
 
-  // Kiểm tra click vào card hay vào playBtn
-  if (card || playBtn) {
-    const artistId = card ? card.dataset.artistId : playBtn.dataset.artistId;
-    if (artistId) {
-      try {
-        const artistData = await fetchArtistById(artistId);
-        await renderArtistHero(artistData);
-        await renderArtistPopularTracks(artistId);
-      } catch (error) {
-        console.error("Lỗi fetch artist by Id", error);
-      }
+  const artistId = card.dataset.artistId;
+  if (artistId) {
+    currentArtistId = artistId; // Lưu artist ID hiện tại
+
+    try {
+      const artistData = await fetchArtistById(artistId);
+      await renderArtistHero(artistData);
+      await renderArtistPopularTracks(artistId);
+
+      setupPlayBtnLarge();
+      syncHitPlayIcons();
+    } catch (error) {
+      console.error("Error fetch artist by id:", error);
     }
   }
 };
@@ -181,16 +229,21 @@ export async function renderPopularArtists(limit = 20, offset = 0) {
 
 // Hàm navigate về home (toggle ngược sections + refresh hits + sync UI)
 function goToHome() {
+  currentArtistId = null; // Reset artist ID
+
   hitSection.classList.add("show");
   artistSection.classList.add("show");
   artistHero.classList.remove("show");
   artistControls.classList.remove("show");
   popularSection.classList.remove("show");
 
+  const currentPlaylistType = musicPlayer.getCurrentPlaylistType();
+
   renderTrendingTracks(20, "#hits-container")
     .then(() => {
       if (musicPlayer) {
         musicPlayer._updatePlayerUI();
+        syncHitPlayIcons();
       }
     })
     .catch((error) => {

@@ -316,14 +316,25 @@ class MusicPlayer {
     this._currentIndex = startIndex;
     this._currentPlayListType = playListType;
 
+    // Lưu playlist type để persist
+    this._saveState("lastPlaylistType:", playListType);
+
     if (this._playList.length > 0) {
       this.loadTrack(this._playList[this._currentIndex], true);
     }
   }
 
+  getCurrentPlaylistType() {
+    return this._currentPlayListType;
+  }
+
   // Check nếu playlist hiện tại là của artist
-  isCurrentPlaylistForArtist(artistId) {
+  isPlayingFromArtist(artistId) {
     return this._currentPlayListType === `artist:${artistId}`;
+  }
+
+  isCurrentPlaylistForArtist(artistId) {
+    return this.isPlayingFromArtist(artistId);
   }
 
   // NEW: Cập nhật playlist mà KHÔNG load track mới (dùng khi navigate)
@@ -447,7 +458,14 @@ class MusicPlayer {
     if (this._isShuffleMode) {
       this._playRandomTrack();
     } else {
-      this._currentIndex = (this._currentIndex + 1) % this._playList.length;
+      // Kiểm tra nếu đã hết playlist
+      if (this._currentIndex >= this._playList.length - 1) {
+        // Hết bài -> dừng lại không wrap
+        this.pause();
+        return;
+      }
+
+      this._currentIndex = this._currentIndex + 1; // % this._playList.length
       this.loadTrack(this._playList[this._currentIndex], true);
     }
   }
@@ -462,9 +480,13 @@ class MusicPlayer {
       return;
     }
 
+    if (this._currentIndex <= 0) {
+      this._audioElement.currentTime = 0;
+      return;
+    }
+
     // Ngược lại, phát track trước
-    this._currentIndex =
-      (this._currentIndex - 1 + this._playList.length) % this._playList.length;
+    this._currentIndex = this._currentIndex - 1; // + this._playList.length % this._playList.length;
     this.loadTrack(this._playList[this._currentIndex], true);
   }
 
