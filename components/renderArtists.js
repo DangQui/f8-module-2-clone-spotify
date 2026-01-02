@@ -164,13 +164,6 @@ export async function renderPopularArtists(limit = 20, offset = 0) {
         artist.removeEventListener("click", handleArtistClick);
 
       artist.addEventListener("click", handleArtistClick);
-
-      // artist.querySelectorAll(".artist-play-btn").forEach((btn) => {
-      //   btn.addEventListener("click", (e) => {
-      //     const artistId = e.currentTarget.data.artistId;
-      //     console.log("Play artist:", artistId);
-      //   });
-      // });
     }
 
     return artists;
