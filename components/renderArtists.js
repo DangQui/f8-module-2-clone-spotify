@@ -54,6 +54,7 @@ export async function renderArtistPopularTracks(artistId, limit = 10) {
   try {
     const response = await fetchArtistPopularTracks(artistId);
     const tracks = response.tracks || [];
+    const artist = response.artist || null; // Lấy thông tin artist
     const trackList = document.querySelector(".popular-section .track-list");
 
     if (response.pagination.total === 0) {
@@ -61,13 +62,18 @@ export async function renderArtistPopularTracks(artistId, limit = 10) {
       return [];
     }
 
-    trackList.innerHTML = ""; // Clear toàn bộ nội dung cũ trong .track-list
-    tracks.slice(0, limit).forEach((track, index) => {
+    trackList.innerHTML = "";
+
+    // Map artist_name vào mỗi track (vì API không trả về field này)
+    const tracksWithArtist = tracks.slice(0, limit).map((track) => ({
+      ...track,
+      artist_name: artist?.name || "Unknown Artist",
+    }));
+
+    tracksWithArtist.forEach((track, index) => {
       const trackItem = document.createElement("div");
       trackItem.className = "track-item";
-      // Giả lập active item đầu tiên
       if (index === 0) trackItem.classList.add("playing");
-      // Set id cho từng track
       trackItem.dataset.trackId = track.id;
 
       trackItem.innerHTML = `
@@ -89,7 +95,7 @@ export async function renderArtistPopularTracks(artistId, limit = 10) {
       trackList.appendChild(trackItem);
     });
 
-    return tracks;
+    return tracksWithArtist; // Return tracks có artist_name
   } catch (error) {
     console.error("Error rendering artist popular tracks:", error);
     const trackList = document.querySelector(".popular-section .track-list");
@@ -100,9 +106,10 @@ export async function renderArtistPopularTracks(artistId, limit = 10) {
   }
 }
 
-// Setup event listner cho play-btn-large
+// BƯỚC 3: Setup event listener cho play-btn-large
 function setupPlayBtnLarge() {
   const playLargeBtn = document.querySelector(".play-btn-large");
+
   if (!playLargeBtn) return;
 
   // Remove old listeners
@@ -113,9 +120,14 @@ function setupPlayBtnLarge() {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!currentArtistId) return;
+    if (!currentArtistId) {
+      console.warn("No current artist ID");
+      return;
+    }
 
-    // Case 1: Đang playlist của artist này -> toggle
+    console.log("Play-btn-large clicked for artist:", currentArtistId);
+
+    // Case 1: Đang play playlist của artist này → Toggle
     if (musicPlayer.isPlayingFromArtist(currentArtistId)) {
       if (musicPlayer._isPlaying) {
         musicPlayer.pause();
@@ -125,14 +137,14 @@ function setupPlayBtnLarge() {
       return;
     }
 
-    // Case 2: Chưa có hoặc artist khác => load playlist
+    // Case 2: Chưa có hoặc artist khác → Load playlist
     try {
       const tracks = await renderArtistPopularTracks(currentArtistId);
       if (tracks.length > 0) {
         musicPlayer.loadPlaylist(tracks, 0, `artist:${currentArtistId}`);
         musicPlayer.play();
       } else {
-        console.warn("No track for artist:", currentArtistId);
+        console.warn("No tracks for artist:", currentArtistId);
       }
     } catch (error) {
       console.error("Error loading artist tracks:", error);
@@ -149,6 +161,8 @@ handleArtistClick = async (e) => {
     return;
   }
 
+  if (!card) return;
+
   hitSection.classList.remove("show");
   artistSection.classList.remove("show");
   artistHero.classList.add("show");
@@ -156,10 +170,6 @@ handleArtistClick = async (e) => {
   popularSection.classList.add("show");
 
   window.scrollTo({ top: 0, behavior: "smooth" });
-
-  if (musicPlayer && musicPlayer._isPlaying) {
-    syncHitPlayIcons();
-  }
 
   const artistId = card.dataset.artistId;
   if (artistId) {
@@ -170,10 +180,13 @@ handleArtistClick = async (e) => {
       await renderArtistHero(artistData);
       await renderArtistPopularTracks(artistId);
 
+      // BƯỚC 3: Setup play-btn-large sau khi render xong
       setupPlayBtnLarge();
+
+      // FIXED: Sync UI buttons sau khi render artist
       syncHitPlayIcons();
     } catch (error) {
-      console.error("Error fetch artist by id:", error);
+      console.error("Lỗi fetch artist by Id", error);
     }
   }
 };
@@ -183,7 +196,6 @@ export async function renderPopularArtists(limit = 20, offset = 0) {
     const data = await fetchAllArtists(limit, offset);
     const artists = data.artists;
 
-    // Tính total items từ data. Dùng cho carousel
     const totalItems = data.pagination?.total;
     const artist = document.getElementById("popular-artists-track");
     if (artist) {
@@ -218,7 +230,6 @@ export async function renderPopularArtists(limit = 20, offset = 0) {
   } catch (error) {
     console.error("Error rendering popular artists:", error);
 
-    // Nếu track tồn tại, set no-data message thay vì empty
     const track = document.getElementById("popular-artists-track");
     if (track) {
       track.innerHTML = `<p class="no-data">No popular artists available</p>`;
@@ -227,7 +238,7 @@ export async function renderPopularArtists(limit = 20, offset = 0) {
   }
 }
 
-// Hàm navigate về home (toggle ngược sections + refresh hits + sync UI)
+// Hàm navigate về home
 function goToHome() {
   currentArtistId = null; // Reset artist ID
 
@@ -237,13 +248,14 @@ function goToHome() {
   artistControls.classList.remove("show");
   popularSection.classList.remove("show");
 
+  // BƯỚC 5: Chỉ refresh trending nếu không đang play artist
   const currentPlaylistType = musicPlayer.getCurrentPlaylistType();
 
   renderTrendingTracks(20, "#hits-container")
     .then(() => {
       if (musicPlayer) {
         musicPlayer._updatePlayerUI();
-        syncHitPlayIcons();
+        syncHitPlayIcons(); // Sync tất cả buttons
       }
     })
     .catch((error) => {
@@ -258,7 +270,7 @@ const logoIcon = document.querySelector(".logo-icon");
 
 if (homeBtn) {
   homeBtn.addEventListener("click", (e) => {
-    e.preventDefault(); // Nếu là link
+    e.preventDefault();
     goToHome();
   });
 }

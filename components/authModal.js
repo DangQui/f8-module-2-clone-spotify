@@ -445,7 +445,6 @@ export function initAuthModal() {
         const number = item.querySelector(".track-number");
         if (number)
           number.innerHTML = `<i class="fas fa-volume-up playing-icon"></i>`;
-        // Nếu có play icon trong item: Update pause (giả sử add <button class="track-play-btn"><i class="fa-play"></i></button>)
         const trackIcon = item.querySelector(".track-play-btn i");
         if (trackIcon) {
           trackIcon.classList.remove("fa-play");
@@ -657,7 +656,33 @@ export function initAuthModal() {
           console.log("Play track:", trackId);
 
           if (musicPlayer) {
-            musicPlayer._playTrackById(trackId);
+            // Tìm track trong trending playlist
+            const trendingTracks = musicPlayer.getPlaylist();
+            let track = trendingTracks.find((t) => t.id === trackId);
+
+            // Nếu không tìm thấy hoặc đang play từ artist -> load lại trending playlist
+            const currentPlaylistType = musicPlayer.getCurrentPlaylistType();
+            if (!track || currentPlaylistType?.startsWith("artist:")) {
+              // Fetch lại trending tracks để đảm bảo có data
+              try {
+                const { fetchTrendingTracks } = await import(
+                  "../services/tracksService.js"
+                );
+                const tracks = await fetchTrendingTracks(20);
+                track = tracks.find((t) => t.id === trackId);
+
+                if (track) {
+                  const trackIndex = tracks.findIndex((t) => t.id === trackId);
+                  musicPlayer.loadPlaylist(tracks, trackIndex, "trending");
+                  musicPlayer.play();
+                }
+              } catch (error) {
+                console.error("Error loading trending tracks:", error);
+              }
+            } else {
+              // Đã có track trong playlist hiện tại
+              musicPlayer._playTrackById(trackId);
+            }
           }
         } else if (target.classList.contains("artist-play-btn")) {
           e.preventDefault();

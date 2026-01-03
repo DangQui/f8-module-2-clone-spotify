@@ -458,14 +458,7 @@ class MusicPlayer {
     if (this._isShuffleMode) {
       this._playRandomTrack();
     } else {
-      // Kiểm tra nếu đã hết playlist
-      if (this._currentIndex >= this._playList.length - 1) {
-        // Hết bài -> dừng lại không wrap
-        this.pause();
-        return;
-      }
-
-      this._currentIndex = this._currentIndex + 1; // % this._playList.length
+      this._currentIndex = (this._currentIndex + 1) % this._playList.length;
       this.loadTrack(this._playList[this._currentIndex], true);
     }
   }
@@ -486,7 +479,8 @@ class MusicPlayer {
     }
 
     // Ngược lại, phát track trước
-    this._currentIndex = this._currentIndex - 1; // + this._playList.length % this._playList.length;
+    this._currentIndex =
+      (this._currentIndex - 1 + this._playList.length) % this._playList.length;
     this.loadTrack(this._playList[this._currentIndex], true);
   }
 

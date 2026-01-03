@@ -6,6 +6,10 @@ import musicPlayer from "./musicPlayer.js";
 
 // Hàm để sync icons cho tất cả hit-play-btn dựa trên current player state
 export function syncHitPlayIcons() {
+  const currentPlaylistType = musicPlayer?.getCurrentPlaylistType();
+  const isPlaying = musicPlayer?._isPlaying;
+  const currentTrack = musicPlayer?.getCurrentTrack();
+
   const allHitBtns = document.querySelectorAll(".hit-play-btn[data-track-id]");
   allHitBtns.forEach((btn) => {
     const icon = btn.querySelector("i");
@@ -18,13 +22,13 @@ export function syncHitPlayIcons() {
 
       // Nếu match current track và đang playing -> Set pause + playing
       if (
-        musicPlayer &&
-        musicPlayer._currentTrack?.id === trackId &&
-        musicPlayer._isPlaying
+        currentTrack?.id === trackId &&
+        isPlaying &&
+        currentPlaylistType === "trending"
       ) {
         icon.classList.remove("fa-play");
         icon.classList.add("fa-pause");
-        btn.classList.remove("playing");
+        btn.classList.add("playing");
       }
     }
   });
@@ -43,7 +47,7 @@ export function syncHitPlayIcons() {
       btn.classList.remove("playing");
 
       // Nếu đang play từ artist này -> Set pause
-      if (musicPlayer.isPlayingFromArtist(artistId) && musicPlayer._isPlaying) {
+      if (musicPlayer.isPlayingFromArtist(artistId) && isPlaying) {
         icon.classList.remove("fa-play");
         icon.classList.add("fa-pause");
         btn.classList.add("playing");
@@ -102,10 +106,10 @@ export async function renderTrendingTracks(
     if (!currentPlayListType || !currentPlayListType.startsWith("artist:")) {
       if (data.length > 0 && !currentTrack) {
         // Chỉ load playlist khi là lần đầu tiên (chưa có track)
-        musicPlayer.loadPlaylist(data, 0);
+        musicPlayer.loadPlaylist(data, 0, "trending");
       } else if (data.length > 0) {
         // Nếu đã có track, chỉ cập nhật playlist mà KHÔNG load track mới
-        musicPlayer.updatePlaylistOnly(data);
+        musicPlayer.updatePlaylistOnly(data, "trending");
       }
     }
 
