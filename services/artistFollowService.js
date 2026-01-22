@@ -1,4 +1,4 @@
-import httpRequest from "../utils/httpRequest";
+import httpRequest from "../utils/httpRequest.js";
 
 // Follow artist
 export async function followArtist(artistId) {
