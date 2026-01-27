@@ -46,7 +46,7 @@ async function renderArtistHero(artistData) {
     const monthlyListeners = heroContent.querySelector(".monthly-listeners");
     artistName.textContent = artistData.name;
     monthlyListeners.textContent = formatMonthlyListeners(
-      artistData.monthly_listeners
+      artistData.monthly_listeners,
     );
   }
 }
@@ -114,14 +114,16 @@ function initializeFollowButton(artistId) {
 
   currentFollowButton = new ArtistFollowButton(
     "artistFollowButtonContainer",
-    artistId
+    artistId,
   );
   currentFollowButton.init();
 }
 
 // Setup event listener cho play-btn-large
 function setupPlayBtnLarge() {
-  const playLargeBtn = document.querySelector(".play-btn-large");
+  const playLargeBtn = document.querySelector(
+    ".artist-controls .play-btn-large",
+  );
 
   if (!playLargeBtn) return;
 
@@ -162,16 +164,22 @@ function setupPlayBtnLarge() {
   });
 }
 
+// Xử lý click artist card
 handleArtistClick = async (e) => {
+  // Artist card được click
   const card = e.target.closest(".hit-card[data-artist-id]");
+  // Kiểm tra xem có click vào nút play không
   const playBtn = e.target.closest(".artist-play-btn");
 
+  // Nếu click vào nút play thì return (logic đã sử lý ở authModal.js)
   if (playBtn) {
     return;
   }
 
+  // Nếu không phải artist card thì return
   if (!card) return;
 
+  // Navigate: Ẩn home sections, hiện artist sections
   hitSection.classList.remove("show");
   artistSection.classList.remove("show");
   artistHero.classList.add("show");
@@ -187,12 +195,17 @@ handleArtistClick = async (e) => {
     try {
       const artistData = await fetchArtistById(artistId);
       await renderArtistHero(artistData);
-      await renderArtistPopularTracks(artistId);
+      // await renderArtistPopularTracks(artistId);
 
+      const tracks = await renderArtistPopularTracks(artistId);
+
+      // Setup play button
       setupPlayBtnLarge();
 
+      // Initialize follow button
       initializeFollowButton(artistId);
 
+      // Sync UI
       syncHitPlayIcons();
     } catch (error) {
       console.error("Lỗi fetch artist by Id", error);
@@ -206,9 +219,9 @@ export async function renderPopularArtists(limit = 20, offset = 0) {
     const artists = data.artists;
 
     const totalItems = data.pagination?.total;
-    const artist = document.getElementById("popular-artists-track");
-    if (artist) {
-      artist.innerHTML = artists
+    const artistTrack = document.getElementById("popular-artists-track");
+    if (artistTrack) {
+      artistTrack.innerHTML = artists
         .map(
           (artist) => `
         <div class="hit-card track-artist-item" data-artist-id="${artist.id}">
@@ -225,14 +238,16 @@ export async function renderPopularArtists(limit = 20, offset = 0) {
             <p class="artist-card-type">Artist</p>
           </div>
         </div>
-      `
+      `,
         )
         .join("");
 
+      // Remove event listener cũ trước khi add mới
       if (handleArtistClick)
-        artist.removeEventListener("click", handleArtistClick);
+        artistTrack.removeEventListener("click", handleArtistClick);
 
-      artist.addEventListener("click", handleArtistClick);
+      // Gắn sự kiện listener mới
+      artistTrack.addEventListener("click", handleArtistClick);
     }
 
     return artists;

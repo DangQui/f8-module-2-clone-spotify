@@ -86,7 +86,7 @@ export function initAuthModal() {
           passwordInput,
           group,
           span,
-          "Password cannot be blank."
+          "Password cannot be blank.",
         );
       }
     }
@@ -112,7 +112,7 @@ export function initAuthModal() {
           passwordInput,
           group,
           span,
-          "Password cannot be blank."
+          "Password cannot be blank.",
         );
       }
     }
@@ -132,7 +132,7 @@ export function initAuthModal() {
 
     // Reset lỗi
     [emailGroup, passwordGroup].forEach((group) =>
-      group.classList.remove("invalid")
+      group.classList.remove("invalid"),
     );
     emailSpan.textContent = "";
     passwordSpan.textContent = "";
@@ -145,7 +145,7 @@ export function initAuthModal() {
     try {
       const { user, access_token } = await httpRequest.post(
         "auth/register",
-        credentials
+        credentials,
       );
       localStorage.setItem("accessToken", access_token);
       localStorage.setItem("currentUser", JSON.stringify(user));
@@ -211,7 +211,7 @@ export function initAuthModal() {
     try {
       const { user, access_token } = await httpRequest.post(
         "auth/login",
-        credentials
+        credentials,
       );
       localStorage.setItem("accessToken", access_token);
       localStorage.setItem("currentUser", JSON.stringify(user));
@@ -259,7 +259,7 @@ export function initAuthModal() {
 
   // Kiểm tra các nút Player Footer
   const playerControls = document.querySelectorAll(
-    ".player-center .control-btn, .player-center .play-btn"
+    ".player-center .control-btn, .player-center .play-btn",
   );
 
   // Lưu trạng thái hiện tại để revert (cho next/prev)
@@ -310,7 +310,7 @@ export function initAuthModal() {
           return;
         }
       },
-      { capture: true } // Chạy trước musicPlayer bubbling
+      { capture: true }, // Chạy trước musicPlayer bubbling
     );
   });
 
@@ -341,7 +341,7 @@ export function initAuthModal() {
           return;
         }
       },
-      { capture: true }
+      { capture: true },
     );
   }
 
@@ -380,7 +380,7 @@ export function initAuthModal() {
           return;
         }
       },
-      { capture: true }
+      { capture: true },
     );
   }
 
@@ -414,7 +414,7 @@ export function initAuthModal() {
           return;
         }
       },
-      { capture: true }
+      { capture: true },
     );
   }
 
@@ -423,7 +423,7 @@ export function initAuthModal() {
     const { trackId, isPlaying } = e.detail;
     console.log("Player play event:", trackId, isPlaying);
     const allHitBtns = document.querySelectorAll(
-      ".hit-play-btn[data-track-id]"
+      ".hit-play-btn[data-track-id]",
     );
     allHitBtns.forEach((btn) => {
       if (btn.dataset.trackId === trackId && isPlaying) {
@@ -437,7 +437,7 @@ export function initAuthModal() {
     });
 
     const allTrackItems = document.querySelectorAll(
-      ".popular-section.show .track-item[data-track-id]"
+      ".popular-section.show .track-item[data-track-id]",
     );
     allTrackItems.forEach((item) => {
       if (item.dataset.trackId === trackId && isPlaying) {
@@ -454,7 +454,7 @@ export function initAuthModal() {
     });
 
     const allArtistBtns = document.querySelectorAll(
-      ".artist-play-btn[data-artist-id]"
+      ".artist-play-btn[data-artist-id]",
     );
     allArtistBtns.forEach((btn) => {
       const artistId = btn.dataset.artistId;
@@ -499,7 +499,7 @@ export function initAuthModal() {
     });
 
     const allTrackItems = document.querySelectorAll(
-      ".popular-section .track-item"
+      ".popular-section .track-item",
     );
     allTrackItems.forEach((item) => {
       item.classList.remove("playing");
@@ -541,7 +541,7 @@ export function initAuthModal() {
 
     // Revert tất cả, trừ nút match track mới (nếu đang play) – Giữ nguyên cho hit
     const allHitBtns = document.querySelectorAll(
-      ".hit-play-btn[data-track-id]"
+      ".hit-play-btn[data-track-id]",
     );
     allHitBtns.forEach((btn) => {
       const icon = btn.querySelector("i");
@@ -559,7 +559,7 @@ export function initAuthModal() {
     });
 
     const allTrackItems = document.querySelectorAll(
-      ".popular-section .track-item[data-track-id]"
+      ".popular-section .track-item[data-track-id]",
     );
     allTrackItems.forEach((item) => {
       item.classList.remove("playing");
@@ -583,7 +583,7 @@ export function initAuthModal() {
     });
 
     const allArtistBtns = document.querySelectorAll(
-      ".artist-play-btn[data-artist-id]"
+      ".artist-play-btn[data-artist-id]",
     );
     allArtistBtns.forEach((btn) => {
       const artistId = btn.dataset.artistId;
@@ -629,7 +629,7 @@ export function initAuthModal() {
     "click",
     async (e) => {
       const target = e.target.closest(
-        ".hit-play-btn, .artist-play-btn, .play-btn-large"
+        ".hit-play-btn, .artist-play-btn, .play-btn-large",
       );
 
       if (target) {
@@ -665,9 +665,8 @@ export function initAuthModal() {
             if (!track || currentPlaylistType?.startsWith("artist:")) {
               // Fetch lại trending tracks để đảm bảo có data
               try {
-                const { fetchTrendingTracks } = await import(
-                  "../services/tracksService.js"
-                );
+                const { fetchTrendingTracks } =
+                  await import("../services/tracksService.js");
                 const tracks = await fetchTrendingTracks(20);
                 track = tracks.find((t) => t.id === trackId);
 
@@ -747,7 +746,7 @@ export function initAuthModal() {
         }
       }
     },
-    { capture: true }
+    { capture: true },
   );
 
   // InitAuthModal

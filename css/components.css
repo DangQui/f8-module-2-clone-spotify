@@ -423,9 +423,10 @@
   border-radius: var(--radius-full);
   background-color: var(--accent-primary);
   color: var(--bg-primary);
-  display: flex;
+  /* display: flex; */
   align-items: center;
   justify-content: center;
+  margin-right: 20px;
   transition: all var(--transition-fast);
 }
 
@@ -1449,7 +1450,7 @@
   position: fixed;
   bottom: var(--spacing-2xl);
   left: 50%;
-  transform: translateX(-50%) translateY(100px);
+  transform: translateX(400%) translateY(-80%);
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
   padding: var(--spacing-md) var(--spacing-lg);
@@ -1459,7 +1460,7 @@
   align-items: center;
   gap: var(--spacing-md);
   z-index: var(--z-modal);
-  opacity: 0;
+  opacity: 1;
   transition: all var(--transition-normal);
   min-width: 250px;
   max-width: 400px;
@@ -1467,7 +1468,7 @@
 
 .notification-toast.show {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(195%) translateY(-80%);
 }
 
 .notification-toast.success {
